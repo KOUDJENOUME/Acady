@@ -170,25 +170,38 @@ def enseignant_verification_otp(request):
 # ------------------------------
 # MOT DE PASSE OUBLIE
 # ------------------------------
+import threading
+from django.core.mail import send_mail
+from django.conf import settings
+
 def enseignant_mdp_oublie(request):
     if request.method == "POST":
         email = request.POST.get("email")
 
         try:
             enseignant = Enseignant.objects.get(email=email)
-
             otp = str(random.randint(100000, 999999))
             enseignant.otp_code = otp
             enseignant.otp_timestamp = timezone.now()
             enseignant.save()
 
-            send_mail(
-                "Code de réinitialisation",
-                f"Votre code est : {otp}",
-                settings.DEFAULT_FROM_EMAIL,
-                [email],
-                fail_silently=False
-            )
+            # Envoi async dans un thread séparé
+            def send_otp_email():
+                try:
+                    send_mail(
+                        "Code de réinitialisation",
+                        f"Votre code est : {otp}",
+                        settings.DEFAULT_FROM_EMAIL,
+                        [email],
+                        fail_silently=False
+                    )
+                except Exception as e:
+                    print(f"Erreur email: {e}")  # Log l'erreur
+
+            # Lance le thread
+            email_thread = threading.Thread(target=send_otp_email)
+            email_thread.daemon = True  # Thread se termine avec le programme
+            email_thread.start()
 
             request.session["reset_enseignant_id"] = enseignant.id
             messages.success(request, "Un code a été envoyé à votre email.")
@@ -198,7 +211,6 @@ def enseignant_mdp_oublie(request):
             messages.error(request, "Aucun compte trouvé avec cet email.")
 
     return render(request, "enseignant/mdp_oublie_email.html")
-
 # ------------------------------
 # OTP POUR RESET MOT DE PASSE
 # ------------------------------
