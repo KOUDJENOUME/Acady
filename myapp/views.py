@@ -191,7 +191,7 @@ def enseignant_mdp_oublie(request):
                     send_mail(
                         "Code de réinitialisation",
                         f"Votre code est : {otp}",
-                        settings.DEFAULT_FROM_EMAIL,
+                        "smtp.sendgrid.net",
                         [email],
                         fail_silently=False
                     )
