@@ -32,7 +32,7 @@ SECRET_KEY = 'django-insecure-!rl9gpd=70!n!ccp@g40+2-g%yntj-ak7^lwikeki5-48n*-(j
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = ["127.0.0.1", "localhost", ".ngrok-free.app"]
+ALLOWED_HOSTS = ["acady.onrender.com", "localhost", "127.0.0.1"]
 
 # Autoriser les origines de confiance pour CSRF
 CSRF_TRUSTED_ORIGINS = [
