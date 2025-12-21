@@ -25,7 +25,8 @@ class Enseignant(models.Model):
     is_verified = models.BooleanField(default=False)
     otp_code = models.CharField(max_length=6, null=True, blank=True)
     otp_timestamp = models.DateTimeField(null=True, blank=True)
-
+    reset_token = models.CharField(max_length=100, null=True, blank=True)
+    reset_token_expires = models.DateTimeField(null=True, blank=True)
     def __str__(self):
         return f"{self.nom} {self.prenoms}"
        

@@ -174,67 +174,287 @@ import threading
 from django.core.mail import send_mail
 from django.conf import settings
 
+# views.py
+import secrets
+import hashlib
+from datetime import timedelta
+from django.utils import timezone
+from django.core.mail import EmailMessage
+from django.conf import settings
+from django.urls import reverse
+import ssl
+import smtplib
+from email.mime.text import MIMEText
+from email.mime.multipart import MIMEMultipart
+import logging
+
+logger = logging.getLogger(__name__)
+
+# views.py
+import secrets
+import random
+import ssl
+import smtplib
+from email.mime.text import MIMEText
+from email.mime.multipart import MIMEMultipart
+from datetime import timedelta
+from django.utils import timezone
+from django.shortcuts import render, redirect
+from django.contrib import messages
+from django.conf import settings
+import logging
+
+logger = logging.getLogger(__name__)
+
 def enseignant_mdp_oublie(request):
     if request.method == "POST":
         email = request.POST.get("email")
 
+        if not email:
+            messages.error(request, "L'email est requis")
+            return render(request, "enseignant/mdp_oublie_email.html")
+
         try:
+            # 1. Vérifier si l'utilisateur existe
             enseignant = Enseignant.objects.get(email=email)
+            
+            # 2. Générer un code OTP (6 chiffres comme avant)
             otp = str(random.randint(100000, 999999))
+            
+            # 3. Stocker le code OTP avec expiration (2 minutes comme avant)
             enseignant.otp_code = otp
             enseignant.otp_timestamp = timezone.now()
             enseignant.save()
-
-            # Envoi async dans un thread séparé
-            def send_otp_email():
-                try:
-                    send_mail(
-                        "Code de réinitialisation",
-                        f"Votre code est : {otp}",
-                        "smtp.sendgrid.net",
-                        [email],
-                        fail_silently=False
-                    )
-                except Exception as e:
-                    print(f"Erreur email: {e}")  # Log l'erreur
-
-            # Lance le thread
-            email_thread = threading.Thread(target=send_otp_email)
-            email_thread.daemon = True  # Thread se termine avec le programme
-            email_thread.start()
-
+            
+            # 4. Envoyer l'email OTP avec la méthode robuste
+            send_otp_email(email, otp)
+            
+            # 5. Stocker l'ID dans la session pour la vérification
             request.session["reset_enseignant_id"] = enseignant.id
-            messages.success(request, "Un code a été envoyé à votre email.")
+            
+            messages.success(request, "Un code de vérification a été envoyé à votre email.")
             return redirect("enseignant_mdp_oublie_otp")
-
+            
         except Enseignant.DoesNotExist:
+            # Même message que dans ton code original
             messages.error(request, "Aucun compte trouvé avec cet email.")
-
+        except Exception as e:
+            logger.error(f"Erreur réinitialisation mdp: {e}")
+            messages.error(request, "Une erreur est survenue. Veuillez réessayer.")
+    
     return render(request, "enseignant/mdp_oublie_email.html")
+
+
+def send_otp_email(to_email, otp_code):
+    """Envoi robuste d'email OTP (comme nodemailer)"""
+    
+    # Configuration Gmail (comme dans ton code Node.js)
+    sender_email = "modestekoudjenoume02@gmail.com"
+    sender_password = "urob lsme eyck gkul"
+    
+    # Sujet et contenu
+    subject = "Code de vérification - Acady"
+    
+    # Version texte simple
+    text = f"""Bonjour,
+
+Votre code de vérification pour réinitialiser votre mot de passe est :
+
+{otp_code}
+
+Ce code est valable pendant 2 minutes.
+
+Si vous n'avez pas demandé cette réinitialisation, ignorez cet email.
+
+Cordialement,
+L'équipe Acady"""
+    
+    # Version HTML stylée
+    html = f"""<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>Code de vérification</title>
+    <style>
+        body {{ font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; }}
+        .container {{ background-color: #f9f9f9; padding: 30px; border-radius: 10px; }}
+        .otp-code {{ 
+            font-size: 32px; 
+            font-weight: bold; 
+            color: #2c3e50; 
+            text-align: center;
+            letter-spacing: 10px;
+            margin: 30px 0;
+            padding: 20px;
+            background-color: #ecf0f1;
+            border-radius: 5px;
+            font-family: monospace;
+        }}
+        .warning {{ 
+            background-color: #fff3cd; 
+            border-left: 4px solid #ffc107; 
+            padding: 15px;
+            margin: 20px 0;
+            border-radius: 4px;
+        }}
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h2 style="color: #2c3e50;">Code de vérification</h2>
+        
+        <p>Bonjour,</p>
+        
+        <p>Vous avez demandé une réinitialisation de mot de passe pour votre compte Acady.</p>
+        
+        <p>Utilisez le code suivant pour vérifier votre identité :</p>
+        
+        <div class="otp-code">
+            {otp_code}
+        </div>
+        
+        <div class="warning">
+            <p><strong>⚠️ Ce code expirera dans 2 minutes.</strong></p>
+        </div>
+        
+        <p>Si vous n'avez pas demandé cette réinitialisation, vous pouvez ignorer cet email en toute sécurité.</p>
+        
+        <hr style="border: none; border-top: 1px solid #eee; margin: 30px 0;">
+        
+        <p style="color: #7f8c8d; font-size: 14px;">
+            Cordialement,<br>
+            <strong>L'équipe Acady</strong>
+        </p>
+    </div>
+</body>
+</html>"""
+    
+    # Création du message MIME
+    msg = MIMEMultipart('alternative')
+    msg['Subject'] = subject
+    msg['From'] = sender_email
+    msg['To'] = to_email
+    
+    # Attache les versions texte et HTML
+    msg.attach(MIMEText(text, 'plain'))
+    msg.attach(MIMEText(html, 'html'))
+    
+    # Connexion SMTP avec timeout (10 secondes max)
+    try:
+        # Créer un contexte SSL sécurisé
+        context = ssl.create_default_context()
+        
+        # Connexion SMTP_SSL (port 465) - plus fiable
+        with smtplib.SMTP_SSL('smtp.gmail.com', 465, timeout=10, context=context) as server:
+            server.login(sender_email, sender_password)
+            server.send_message(msg)
+            
+        logger.info(f"Email OTP envoyé à {to_email}")
+        return True
+        
+    except smtplib.SMTPException as e:
+        logger.error(f"Erreur SMTP: {e}")
+        # Fallback: utiliser la méthode simple
+        return send_otp_fallback(to_email, otp_code)
+    except Exception as e:
+        logger.error(f"Erreur générale email: {e}")
+        return send_otp_fallback(to_email, otp_code)
+
+
+def send_otp_fallback(to_email, otp_code):
+    """Méthode de secours si SMTP échoue"""
+    try:
+        from django.core.mail import send_mail
+        
+        send_mail(
+            subject="Code de vérification - Acady",
+            message=f"Votre code de vérification est : {otp_code}",
+            from_email=settings.DEFAULT_FROM_EMAIL,
+            recipient_list=[to_email],
+            fail_silently=False,
+        )
+        return True
+    except Exception as e:
+        logger.error(f"Fallback email aussi en échec: {e}")
+        return False
+
+
 # ------------------------------
-# OTP POUR RESET MOT DE PASSE
+# VÉRIFICATION OTP (identique à avant)
 # ------------------------------
 def enseignant_mdp_oublie_otp(request):
+    """Vérification du code OTP"""
+    
     enseignant_id = request.session.get("reset_enseignant_id")
 
     if enseignant_id is None:
+        messages.error(request, "Session expirée. Veuillez recommencer.")
         return redirect("enseignant_mdp_oublie")
 
-    enseignant = Enseignant.objects.get(id=enseignant_id)
+    try:
+        enseignant = Enseignant.objects.get(id=enseignant_id)
 
-    if request.method == "POST":
-        otp = request.POST.get("otp")
-        if otp == enseignant.otp_code:
-            diff = timezone.now() - enseignant.otp_timestamp
-            if diff.total_seconds() <= 120:
-                return redirect("enseignant_mdp_oublie_reset")
+        if request.method == "POST":
+            otp = request.POST.get("otp")
+            
+            if not otp:
+                messages.error(request, "Veuillez entrer le code")
+                return render(request, "enseignant/mdp_oublie_otp.html")
+            
+            if otp == enseignant.otp_code:
+                # Vérifier l'expiration (2 minutes)
+                diff = timezone.now() - enseignant.otp_timestamp
+                if diff.total_seconds() <= 120:
+                    # Code valide, rediriger vers reset
+                    return redirect("enseignant_mdp_oublie_reset")
+                else:
+                    messages.error(request, "Le code a expiré.")
             else:
-                messages.error(request, "Le code a expiré.")
+                messages.error(request, "Code incorrect.")
+
+        return render(request, "enseignant/mdp_oublie_otp.html")
+        
+    except Enseignant.DoesNotExist:
+        messages.error(request, "Session invalide. Veuillez recommencer.")
+        return redirect("enseignant_mdp_oublie")
+
+
+# ------------------------------
+# RESET MOT DE PASSE (identique à avant)
+# ------------------------------
+def enseignant_mdp_oublie_reset(request):
+    """Formulaire de nouveau mot de passe"""
+    
+    enseignant_id = request.session.get("reset_enseignant_id")
+    
+    if enseignant_id is None:
+        return redirect("enseignant_mdp_oublie")
+    
+    enseignant = Enseignant.objects.get(id=enseignant_id)
+    
+    if request.method == "POST":
+        password = request.POST.get("password")
+        password_confirm = request.POST.get("confirm_password")
+        
+        if password != password_confirm:
+            messages.error(request, "Les mots de passe ne correspondent pas")
+        elif len(password) < 6:
+            messages.error(request, "Le mot de passe doit contenir au moins 6 caractères")
         else:
-            messages.error(request, "Code incorrect.")
-
-    return render(request, "enseignant/mdp_oublie_otp.html")
-
+            # Mettre à jour le mot de passe
+            enseignant.set_password(password)
+            enseignant.otp_code = None  # Effacer le code OTP
+            enseignant.otp_timestamp = None
+            enseignant.save()
+            
+            # Nettoyer la session
+            if 'reset_enseignant_id' in request.session:
+                del request.session['reset_enseignant_id']
+            
+            messages.success(request, "Mot de passe réinitialisé avec succès ! Vous pouvez maintenant vous connecter.")
+            return redirect("enseignant_login")
+    
+    return render(request, "enseignant/mdp_oublie_reset.html")
 # ------------------------------
 # RESET MOT DE PASSE
 # ------------------------------

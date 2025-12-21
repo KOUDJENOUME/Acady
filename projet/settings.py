@@ -152,10 +152,11 @@ INFOBIP_SENDER = config('INFOBIP_SENDER', default='AcadyApp')
 # settings.py
 
 EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
-EMAIL_HOST = 'smtp.gmail.com'  # pour Gmail
+EMAIL_HOST = 'smtp.sendgrid.net'
 EMAIL_PORT = 587
 EMAIL_USE_TLS = True
-EMAIL_HOST_USER = 'letresordedowa78@gmail.com'
-EMAIL_HOST_PASSWORD = 'upou fzjp lckf fucv'  # mot de passe d'application Gmail
-DEFAULT_FROM_EMAIL = 'letresordedowa78@gmail.com'
+EMAIL_HOST_USER = 'apikey'
+EMAIL_HOST_PASSWORD = 'TA_CLE_API_SENDGRID'
+DEFAULT_FROM_EMAIL = 'no-reply@acady.com'
+
 
