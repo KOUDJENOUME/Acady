@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html lang="fr">
+     {% load static %}
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Acadynote - Enregistrement Élève</title>
+    <link rel="icon" href="{% static 'acady.png' %}" type="image/png" />
+    <link href="{% static 'css/bootstrap.min.css' %}" rel="stylesheet">
+    <style>
+        * {
+            font-family: 'Segoe UI', sans-serif;
+            scroll-behavior: smooth;
+            box-sizing: border-box;
+            transition: all 0.3s ease;
+        }
+        body {
+            background: linear-gradient(to right, #e9f2ff, #f0f8ff);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+        .form-wrapper {
+            max-width: 700px;
+            margin: auto;
+            background: #fff;
+            padding: 30px 40px;
+            border-radius: 15px;
+            box-shadow: 0 8px 20px rgba(0,0,0,0.1);
+            margin-top: 60px;
+        }
+        .form-wrapper h2 {
+            text-align: center;
+            margin-bottom: 30px;
+            font-weight: bold;
+            color: #0d6efd;
+        }
+        .form-label {
+            font-weight: 500;
+        }
+        .btn-primary {
+            background-color: #0d6efd;
+            border-color: #084298;
+            font-size: 18px;
+            padding: 10px 20px;
+            border-radius: 10px;
+        }
+        .btn-primary:hover {
+            background-color: #084298;
+        }
+        footer {
+            text-align: center;
+            margin-top: auto;
+            padding: 20px 10px;
+            font-size: 14px;
+            background-color: #ffffffa0;
+        }
+    </style>
+</head>
+<body>
+
+<!-- Navbar -->
+<nav class="navbar navbar-expand-lg navbar-dark bg-primary shadow-sm">
+    <div class="container">
+        <a class="navbar-brand" href="{% url 'accueil' %}"><strong>{{ school_name }}</strong></a>
+    </div>
+</nav>
+
+<!-- Formulaire -->
+<div class="form-wrapper">
+    <h2>Enregistrement d'un Élève</h2>
+    <form method="POST" action="{% url 'enregistrer_eleve' %}" enctype="multipart/form-data">
+        {% csrf_token %}
+
+        {% if messages %}
+            {% for message in messages %}
+                <div class="alert alert-danger text-center">{{ message }}</div>
+            {% endfor %}
+        {% endif %}
+
+        <div class="row mb-3">
+            <div class="col-md-6">
+                <label for="name" class="form-label">Nom</label>
+                <input type="text" class="form-control" id="name" name="nom" required>
+            </div>
+            <div class="col-md-6">
+                <label for="surname" class="form-label">Prénoms</label>
+                <input type="text" class="form-control" id="surname" name="prenoms" required>
+            </div>
+        </div>
+
+        <div class="row mb-3">
+            <div class="col-md-6">
+                <label for="matricule" class="form-label">Matricule</label>
+                <input type="text" class="form-control" id="matricule" name="matricule">
+            </div>
+            <div class="col-md-6">
+                <label for="gender" class="form-label">Sexe</label>
+                <select class="form-select" id="gender" name="sexe">
+                    <option value="M">Masculin</option>
+                    <option value="F">Féminin</option>
+                </select>
+            </div>
+        </div>
+
+        <div class="row mb-3">
+            <div class="col-md-6">
+                <label for="classe" class="form-label">Classe</label>
+                <select class="form-select" id="classe" name="classe">
+                    <option value="6ème">6ème</option>
+                    <option value="5ème">5ème</option>
+                    <option value="4ème">4ème</option>
+                    <option value="3ème">3ème</option>
+                </select>
+            </div>
+            <div class="col-md-6">
+                <label for="academicYear" class="form-label">Année académique</label>
+                <input type="text" class="form-control" id="academicYear" name="annee_academique" placeholder="2024-2025" required>
+            </div>
+            <div class="row mb-3">
+    <div class="col-md-6">
+        <label for="birthdate" class="form-label">Date de naissance</label>
+        <input type="date" class="form-control" id="birthdate" name="date_naissance">
+    </div>
+    <div class="col-md-6">
+        <label for="birthplace" class="form-label">Lieu de naissance</label>
+        <input type="text" class="form-control" id="birthplace" name="lieu_naissance" placeholder="Lieu de naissance">
+    </div>
+</div>
+
+        <div class="row mb-3">
+        <div class="col-md-6">
+        <label for="nationalite" class="form-label">Nationalité</label>
+        <input type="text" class="form-control" id="nationalite" name="nationalite" placeholder="Ex: Béninoise">
+        </div>
+        </div>
+
+            <div class="col-md-6">
+                <label for="telephone_parent" class="form-label">Téléphone parent</label>
+                <input type="text" class="form-control" id="telephone_parent" name="telephone_parent" placeholder="téléphone parent">
+            </div>
+            <div class="mb-3">
+                <label for="email_parent" class="form-label">Email parent</label>
+                <input type="email" class="form-control" id="email_parent" name="email_parent" placeholder="Email parent">
+            </div>
+        </div>
+
+        <div class="mb-4">
+            <label for="profile_eleve" class="form-label">Photo de l'élève</label>
+            <input type="file" class="form-control" id="profile_eleve" name="profile_eleve" accept="image/*">
+        </div>
+
+        <div class="d-grid">
+            <button type="submit" class="btn btn-primary">📥 Enregistrer l'élève</button>
+        </div>
+    </form>
+</div>
+
+<!-- Pied de page -->
+<footer>
+    &copy; 2025 <strong>Acadynote</strong> – Tous droits réservés.
+</footer>
+
+<script>
+    function afficher(){
+        alert("♥♥ Merci de continuer à utiliser Acadynote et de le recommander à vos amis ♥♥");
+    }
+</script>
+
+</body>
+</html>

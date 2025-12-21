@@ -1,0 +1,49 @@
+{% extends "base.html" %}
+
+{% block title %}Ajouter Horaire{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <h3>Ajouter un horaire pour {{ enseignant.nom }} {{ enseignant.prenoms }}</h3>
+
+    <form method="post">
+        {% csrf_token %}
+       <div class="mb-3">
+    <label for="classe">Classe</label>
+    <select id="classe" name="classe" class="form-control" required>
+        {% for c in classes %}
+        <option value="{{ c }}">{{ c }}</option>
+        {% endfor %}
+    </select>
+</div>
+
+
+        <div class="mb-3">
+            <label for="jour">Jour</label>
+            <select id="jour" name="jour" class="form-control">
+                {% for j in jours %}
+                <option value="{{ j }}">{{ j }}</option>
+                {% endfor %}
+            </select>
+        </div>
+
+        <div class="mb-3">
+            <label for="heure_debut">Heure de début</label>
+            <input type="time" id="heure_debut" name="heure_debut" class="form-control" required>
+        </div>
+
+        <div class="mb-3">
+            <label for="heure_fin">Heure de fin</label>
+            <input type="time" id="heure_fin" name="heure_fin" class="form-control" required>
+        </div>
+
+        <div class="mb-3">
+            <label>Matière</label>
+            <input type="text" class="form-control" value="{{ enseignant.matiere }}" readonly>
+        </div>
+
+        <button type="submit" class="btn btn-success">Ajouter</button>
+        <a href="{% url 'liste_enseignants' %}" class="btn btn-secondary">Retour</a>
+    </form>
+</div>
+{% endblock %}

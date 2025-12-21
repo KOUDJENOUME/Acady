@@ -1,0 +1,98 @@
+{% extends 'base.html' %}
+
+{% block title %}Résultats du Trimestre {{ trimestre }}{% endblock %}
+
+{% block content %}
+<div class="container py-5" style="font-family: 'Segoe UI', Arial, sans-serif;">
+
+    <!-- Logo de l'école -->
+    <div class="text-center mb-4">
+        {% if school_logo %}
+            <img src="{{ school_logo.url }}" alt="Logo école" style="height: 80px;">
+        {% elif login.profile_image %}
+            <img src="{{ login.profile_image.url }}" alt="Logo école" style="height: 80px;">
+        {% endif %}
+        <h2 class="fw-bold mt-2 text-primary">{{ school_name }}</h2>
+        <h4 class="text-secondary">Résultats du Trimestre {{ trimestre }}</h4>
+    </div>
+
+    <!-- Infos élève + photo -->
+    <div class="row mb-4">
+        <div class="col-md-8">
+            <p><strong>Nom :</strong> {{ eleve.nom }}</p>
+            <p><strong>Prénoms :</strong> {{ eleve.prenoms }}</p>
+            <p><strong>Classe :</strong> {{ eleve.classe }}</p>
+            <p><strong>Numéro EducMaster :</strong> {{ eleve.matricule }}</p>
+        </div>
+        <div class="col-md-4 text-center">
+            {% if eleve.profile_eleve %}
+                <img src="{{ eleve.profile_eleve.url }}" 
+                     alt="Photo élève" 
+                     class="img-thumbnail shadow"
+                     style="height: 140px; width: 140px; object-fit: cover; border-radius: 10px;">
+            {% else %}
+                <div class="border rounded p-4 bg-light">
+                    <span class="text-muted">Aucune photo de l'élève</span>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Tableau des notes -->
+    <table class="table table-bordered table-striped">
+        <thead class="table-dark text-center">
+            <tr>
+                <th>Matière</th>
+                <th>Interrogations</th>
+                <th>Devoirs</th>
+                <th>Moy. Générale</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for matiere, details in matieres_status.items %}
+            <tr class="text-center">
+                <td>{{ matiere }}</td>
+                <td>
+                    {% if details.interros %}
+                        {% for note in details.interros %}
+                            <span class="badge bg-info text-dark">{{ note }}</span>
+                        {% endfor %}
+                    {% else %}
+                        -
+                    {% endif %}
+                </td>
+                <td>
+                    {% if details.devoirs %}
+                        {% for note in details.devoirs %}
+                            <span class="badge bg-warning text-dark">{{ note }}</span>
+                        {% endfor %}
+                    {% else %}
+                        -
+                    {% endif %}
+                </td>
+                <td>
+                    <strong>{{ details.moyenne_generale|default:0|floatformat:2 }}</strong>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+
+    <!-- Moyenne, rang et appréciation -->
+    <div class="summary mt-4 p-3 text-center text-white bg-primary rounded">
+        <p><strong>Moyenne Trimestrielle :</strong> <span>{{ moyenne_trimestrielle|floatformat:2 }}/20</span></p>
+        <p><strong>Rang :</strong> <span>{{ rang }}</span></p>
+        <p><strong>Appréciation :</strong> <span>{{ appreciation }}</span></p>
+    </div>
+
+    <!-- Boutons -->
+    <div class="text-center mt-4">
+        <a href="{% url 'suivre_eleve' %}" class="btn btn-secondary me-3">⬅️ Retour</a>
+       
+    <footer class="text-center mt-5 text-muted">
+        Merci de votre confiance et de votre soutien dans le suivi de votre enfant.<br>
+        <strong>{{ school_name }}</strong> - Acadynote © 2025
+    </footer>
+
+</div>
+{% endblock %}

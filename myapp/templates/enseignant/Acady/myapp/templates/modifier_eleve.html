@@ -1,0 +1,210 @@
+<!DOCTYPE html>
+<html lang="fr">
+    {% load static %}
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <link rel="icon" href="{% static 'acady.png' %}" type="image/png" />
+  <title>Acadynote</title>
+  <link href="{% static 'css/bootstrap.min.css' %}" rel="stylesheet" />
+  <style>
+    * {
+      font-family: "Roboto", sans-serif;
+      scroll-behavior: smooth;
+      box-sizing: border-box;
+      transition: all 0.3s ease;
+    }
+
+    body {
+      background: linear-gradient(to right, #e9f2ff, #f0f8ff);
+    }
+
+    .form-container {
+      background-color: #fff;
+      padding: 30px;
+      border-radius: 12px;
+      box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1);
+      max-width: 700px;
+      margin: 50px auto;
+    }
+
+    h5 {
+      color: #0d6efd;
+      font-size: 28px;
+      font-weight: bold;
+      margin-bottom: 25px;
+    }
+
+    .btn-primary {
+      background-color: #0d6efd;
+      border-color: #0b5ed7;
+      font-size: 18px;
+      padding: 10px 20px;
+      border-radius: 10px;
+    }
+
+    .btn-primary:hover {
+      background-color: #084298;
+    }
+
+    a {
+      text-decoration: none;
+      color: white;
+    }
+
+    a:hover {
+      color: #cfe2ff;
+    }
+
+    footer {
+      text-align: center;
+      padding: 30px 10px;
+      font-size: 14px;
+      color: #222831;
+      font-family: 'Segoe UI', Verdana, sans-serif;
+    }
+  </style>
+</head>
+<body>
+
+<!-- Barre de navigation -->
+<nav class="navbar navbar-expand-lg navbar-dark bg-primary shadow-sm">
+  <div class="container-fluid">
+    {% if classe == "3ème" %}
+      <a class="navbar-brand" href="{% url 'afficher_troisieme' annee=annee_academique %}">{{ school_name }}</a>
+    {% elif classe == "4ème" %}
+      <a class="navbar-brand" href="{% url 'afficher_quatrieme' annee=annee_academique %}">{{ school_name }}</a>
+    {% elif classe == "5ème" %}
+      <a class="navbar-brand" href="{% url 'afficher_cinquieme' annee=annee_academique %}">{{ school_name }}</a>
+    {% elif classe == "6ème" %}
+      <a class="navbar-brand" href="{% url 'afficher_sixieme' annee=annee_academique %}">{{ school_name }}</a>
+    {% else %}
+      <span class="navbar-brand text-warning">Classe non reconnue</span>
+    {% endif %}
+
+    <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+      <span class="navbar-toggler-icon"></span>
+    </button>
+    
+    <div class="collapse navbar-collapse" id="navbarNav">
+      <ul class="navbar-nav ms-auto">
+        <li class="nav-item">
+          <a class="btn btn-danger" onclick="afficher()" href="{% url 'login' %}">Déconnexion</a>
+        </li>
+      </ul>
+    </div>
+  </div>
+</nav>
+
+<!-- Formulaire de modification -->
+<div class="form-container">
+  <h5 class="text-center">Modifier les informations de ♦{{ eleve.nom }} {{ eleve.prenoms }}♦</h5>
+  <form method="POST" enctype="multipart/form-data">
+    {% csrf_token %}
+    {% if messages %}
+      {% for message in messages %}
+        <div class="alert alert-danger text-center">{{ message }}</div>
+      {% endfor %}
+    {% endif %}
+
+    <div class="mb-3">
+      <label for="name" class="form-label">Nom</label>
+      <input type="text" class="form-control" id="name" name="nom" value="{{ eleve.nom }}" required />
+    </div>
+
+    <div class="mb-3">
+      <label for="surname" class="form-label">Prénoms</label>
+      <input type="text" class="form-control" id="surname" name="prenoms" value="{{ eleve.prenoms }}" required />
+    </div>
+
+    <div class="mb-3">
+      <label for="matricule" class="form-label">Matricule</label>
+      <input type="text" class="form-control" id="matricule" name="matricule" value="{{ eleve.matricule }}" />
+    </div>
+
+    <div class="mb-3">
+      <label for="gender" class="form-label">Sexe</label>
+      <select class="form-select" id="gender" name="sexe">
+        <option value="M" {% if eleve.sexe == 'M' %}selected{% endif %}>Masculin</option>
+        <option value="F" {% if eleve.sexe == 'F' %}selected{% endif %}>Féminin</option>
+      </select>
+    </div>
+
+    <div class="mb-3">
+      <label for="classe" class="form-label">Classe</label>
+      <select class="form-select" id="classe" name="classe">
+        <option value="6ème" {% if eleve.classe == '6ème' %}selected{% endif %}>6ème</option>
+        <option value="5ème" {% if eleve.classe == '5ème' %}selected{% endif %}>5ème</option>
+        <option value="4ème" {% if eleve.classe == '4ème' %}selected{% endif %}>4ème</option>
+        <option value="3ème" {% if eleve.classe == '3ème' %}selected{% endif %}>3ème</option>
+      </select>
+    </div>
+
+    <div class="mb-3">
+      <label for="academicYear" class="form-label">Année académique</label>
+      <input type="text" class="form-control" id="academicYear" name="annee_academique" value="{{ eleve.annee_academique }}" required />
+    </div>
+    <!-- 🔹 Informations personnelles supplémentaires -->
+<div class="mb-3">
+  <label for="date_naissance" class="form-label">Date de naissance</label>
+  <input type="date" class="form-control" id="date_naissance" name="date_naissance"
+         value="{{ eleve.date_naissance|date:'Y-m-d' }}">
+</div>
+
+<div class="mb-3">
+  <label for="lieu_naissance" class="form-label">Lieu de naissance</label>
+  <input type="text" class="form-control" id="lieu_naissance" name="lieu_naissance"
+         value="{{ eleve.lieu_naissance }}" placeholder="Lieu de naissance">
+</div>
+
+<div class="mb-3">
+  <label for="nationalite" class="form-label">Nationalité</label>
+  <input type="text" class="form-control" id="nationalite" name="nationalite" 
+         value="{{ eleve.nationalite }}" placeholder="Ex: Béninoise">
+</div>
+
+    <div class="mb-3">
+      <label for="telephone_parent" class="form-label">Téléphone parent</label>
+      <input type="text" class="form-control" id="telephone_parent" name="telephone_parent" value="{{ eleve.telephone_parent }}" placeholder="Téléphone parent">
+    </div>
+
+    <div class="mb-3">
+      <label for="email_parent" class="form-label">Email parent</label>
+      <input type="email" class="form-control" id="email_parent" name="email_parent" value="{{ eleve.email_parent }}" placeholder="Email parent">
+    </div>
+
+    <!-- Photo actuelle -->
+    {% if eleve.profile_eleve %}
+    <div class="mb-3 text-center">
+      <p>Photo actuelle :</p>
+      <img src="{{ eleve.profile_eleve.url }}" alt="Photo actuelle" 
+           style="width:120px; height:120px; object-fit:cover; border-radius:10px; border:1px solid #ccc;">
+    </div>
+    {% endif %}
+
+    <div class="mb-4">
+      <label for="profile_eleve" class="form-label">Changer la photo</label>
+      <input type="file" class="form-control" id="profile_eleve" name="profile_eleve" accept="image/*" />
+    </div>
+
+    <div class="d-flex justify-content-center">
+      <button type="submit" class="btn btn-primary w-50">💾 Modifier</button>
+    </div>
+  </form>
+</div>
+
+<!-- Scripts -->
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha3/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+  function afficher() {
+    alert("♥♥ Merci de continuer à utiliser Acadynote et de le recommander à vos amis ♥♥");
+  }
+</script>
+
+<!-- Footer -->
+<footer>
+  &copy; 2025 <strong>Acadynote</strong> – Tous droits réservés.
+</footer>
+
+</body>
+</html>

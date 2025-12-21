@@ -1,0 +1,107 @@
+{% extends 'base.html' %}
+{% block title %}Fiche de notes - {{ classe }}{% endblock %}
+
+{% block content %}
+<nav class="navbar navbar-expand-lg navbar-dark bg-primary mb-3">
+  <div class="container-fluid">
+    <a class="navbar-brand mx-auto" href="{% url 'accueil' %}"><strong>{{ school_name }}</strong></a>
+  </div>
+</nav>
+
+<div class="container">
+  <form method="get" class="row g-2 align-items-end mb-3">
+    <div class="col-md-4">
+      <label class="form-label">Matière :</label>
+      <select name="matiere" class="form-select" required>
+        <option value="">-- Choisir une matière --</option>
+        {% for m in matieres %}
+          <option value="{{ m }}" {% if m == matiere_choisie %}selected{% endif %}>{{ m }}</option>
+        {% endfor %}
+      </select>
+    </div>
+
+    <div class="col-md-3">
+      <label class="form-label">Trimestre :</label>
+      <select name="trimestre" class="form-select" required>
+        <option value="1" {% if trimestre == "1" %}selected{% endif %}>Trimestre 1</option>
+        <option value="2" {% if trimestre == "2" %}selected{% endif %}>Trimestre 2</option>
+        <option value="3" {% if trimestre == "3" %}selected{% endif %}>Trimestre 3</option>
+      </select>
+    </div>
+
+    <div class="col-md-2">
+      <button type="submit" class="btn btn-primary w-100">Afficher</button>
+    </div>
+
+    {% if matiere_choisie %}
+    <div class="col-md-3">
+      <button id="download-pdf" type="button" class="btn btn-success w-100">📄 Télécharger PDF</button>
+    </div>
+    {% endif %}
+  </form>
+
+  {% if not matiere_choisie %}
+    <div class="alert alert-info">Sélectionne une matière et un trimestre pour voir les notes.</div>
+  {% else %}
+    <div id="pdf-content">
+      <h5 class="text-center"><strong>{{ school_name }}</strong></h5>
+      <h6 class="text-center">Fiche de notes — {{ classe }} — Année {{ annee_academique }}</h6>
+      <p class="text-center"><strong>Matière :</strong> {{ matiere_choisie }} &nbsp; | &nbsp; <strong>Trimestre :</strong> {{ trimestre }}</p>
+
+      <div class="table-responsive">
+        <table class="table table-bordered table-striped table-sm text-center">
+          <thead class="table-dark">
+            <tr>
+              <th>N°</th>
+              <th>Nom et Prénoms</th>
+              <th>Sexe</th>
+              <th>Int 1</th>
+              <th>Int 2</th>
+              <th>Int 3</th>
+              <th>Moy. Int</th>
+              <th>Dev 1</th>
+              <th>Dev 2</th>
+              <th>Moy. Dev</th>
+              <th>Moy. Générale</th>
+              <th>Rang</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for r in rows %}
+              <tr>
+                <td>{{ forloop.counter }}</td>
+                <td class="text-start">{{ r.eleve.nom }} {{ r.eleve.prenoms }}</td>
+                <td>{{ r.eleve.sexe }}</td>
+                <td>{% if r.int1 %}{{ r.int1|floatformat:2 }}{% else %}-{% endif %}</td>
+                <td>{% if r.int2 %}{{ r.int2|floatformat:2 }}{% else %}-{% endif %}</td>
+                <td>{% if r.int3 %}{{ r.int3|floatformat:2 }}{% else %}-{% endif %}</td>
+                <td>{% if r.moy_interro %}{{ r.moy_interro|floatformat:2 }}{% else %}-{% endif %}</td>
+                <td>{% if r.dev1 %}{{ r.dev1|floatformat:2 }}{% else %}-{% endif %}</td>
+                <td>{% if r.dev2 %}{{ r.dev2|floatformat:2 }}{% else %}-{% endif %}</td>
+                <td>{% if r.moy_devoir %}{{ r.moy_devoir|floatformat:2 }}{% else %}-{% endif %}</td>
+                <td>{% if r.moy_general %}{{ r.moy_general|floatformat:2 }}{% else %}-{% endif %}</td>
+                <td>{{ r.rang }}</td>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  {% endif %}
+</div>
+
+<!-- Génération du PDF -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+<script>
+document.getElementById('download-pdf')?.addEventListener('click', function () {
+    const element = document.getElementById('pdf-content');
+    if (!element) return;
+    html2pdf().set({
+        margin: 10,
+        filename: 'Fiche_{{ classe }}_{{ matiere_choisie }}_T{{ trimestre }}.pdf',
+        html2canvas: { scale: 2 },
+        jsPDF: { unit: 'mm', format: 'a4', orientation: 'landscape' }
+    }).from(element).save();
+});
+</script>
+{% endblock %}

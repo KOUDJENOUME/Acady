@@ -1,0 +1,99 @@
+{% extends 'base.html' %}
+{% block title %}Modifier les notes - Classe {{ classe }}{% endblock %}
+
+{% block content %}
+<nav class="navbar navbar-expand-lg navbar-dark bg-primary mb-4">
+    <div class="container-fluid">
+        <a class="navbar-brand mx-auto" href="{% url 'accueil' %}">
+            <strong>{{ school_name }}</strong>
+        </a>
+    </div>
+    <div class="container-fluid">
+        <span class="navbar-text text-white">
+            Modifier les notes - Classe {{ classe }} ({{ annee_academique }})
+        </span>
+    </div>
+</nav>
+
+<div class="container">
+    {% if messages %}
+        {% for message in messages %}
+            <div class="alert alert-{{ message.tags }} text-center">{{ message }}</div>
+        {% endfor %}
+    {% endif %}
+
+    <form method="POST">
+        {% csrf_token %}
+        <div class="row mb-3">
+            <div class="col-md-4">
+                <label><strong>Matière :</strong></label>
+                <select name="matiere" class="form-select" required>
+                    <option value="Lecture">Lecture</option>
+                    <option value="Communication-Ecrite">Communication-Ecrite</option>
+                    <option value="Histoire-Géographie">Histoire-Géographie</option>
+                    <option value="SVT">SVT</option>
+                    <option value="PCT">PCT</option>
+                    <option value="Mathématiques">Mathématiques</option>
+                    <option value="Anglais">Anglais</option>
+                    <option value="EPS">EPS</option>
+                    <option value="Espagnol">Espagnol</option>
+                    <option value="Conduite">Conduite</option>
+                    <option value="Informatique">Informatique</option>
+                </select>
+            </div>
+
+            <div class="col-md-4">
+                <label><strong>Type de note :</strong></label>
+                <select name="type_note" class="form-select" required>
+                    <option value="interro1">Interrogation 1</option>
+                    <option value="interro2">Interrogation 2</option>
+                    <option value="interro3">Interrogation 3</option>
+                    <option value="devoir1">Devoir 1</option>
+                    <option value="devoir2">Devoir 2</option>
+                </select>
+            </div>
+
+            <div class="col-md-4">
+                <label><strong>Trimestre :</strong></label>
+                <input type="number" name="trimestre" class="form-control" min="1" max="3" value="1" required>
+            </div>
+        </div>
+
+        <table class="table table-bordered table-striped">
+            <thead class="table-dark">
+                <tr>
+                    <th>N°</th>
+                    <th>Nom & Prénoms</th>
+                    <th>Sexe</th>
+                    <th>Note</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for eleve in eleves %}
+                    <tr>
+                        <td>{{ forloop.counter }}</td>
+                        <td>{{ eleve.nom }} {{ eleve.prenoms }}</td>
+                        <td>{{ eleve.sexe }}</td>
+                        <td>
+                            <input 
+                                type="text" 
+                                name="note_{{ eleve.id }}" 
+                                class="form-control" 
+                                placeholder="0-20">
+                        </td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+
+        <div class="text-center mt-4">
+            <button type="submit" name="action" value="sauvegarder" class="btn btn-success btn-lg me-3">
+                💾 Enregistrer les modifications
+            </button>
+            <button type="submit" name="action" value="calculer" class="btn btn-primary btn-lg">
+                🧮 Calculer les moyennes
+            </button>
+        </div>
+    </form>
+</div>
+{% endblock %}

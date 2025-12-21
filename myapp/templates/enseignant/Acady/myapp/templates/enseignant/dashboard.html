@@ -1,0 +1,120 @@
+{% extends 'base.html' %}
+
+{% block title %}Dashboard Enseignant{% endblock %}
+
+{% block content %}
+
+<!-- NAVBAR -->
+<nav class="navbar navbar-expand-lg navbar-dark bg-dark shadow">
+    <div class="container-fluid">
+        <a class="navbar-brand fw-bold text-warning" href="#">Espace Enseignant</a>
+
+        <!-- Bouton hamburger -->
+        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarMenu">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+
+        <!-- Menu -->
+        <div class="collapse navbar-collapse" id="navbarMenu">
+            <ul class="navbar-nav ms-auto mb-2 mb-lg-0">
+                <li class="nav-item">
+                    <a class="nav-link active" href="#">Dashboard</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="{% url 'suivre_eleve' %}">Suivre un élève</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="{% url 'mon_emploi_du_temps' enseignant.id %}">Consulter mon emploi du temps</a>
+                </li>
+                <li class="nav-item">
+    <a class="nav-link" href="{% url 'heures_mensuelles' %}">Heures mensuelles</a>
+</li>
+
+                <li class="nav-item">
+                    <a class="nav-link text-danger fw-bold" href="{% url 'enseignant_logout' %}">Déconnexion</a>
+                </li>
+               
+            </ul>
+        </div>
+    </div>
+</nav>
+
+<!-- CONTENU -->
+<div class="dashboard-container">
+
+    <!-- Nom de l'école -->
+    <div class="text-center py-5">
+        <h1 class="school-name text-white fw-bold">CPEG LE TRÉSOR DE DOWA</h1>
+        <p class="text-white-50 fs-5">Bienvenue sur votre espace enseignant</p>
+    </div>
+
+    <!-- Bienvenue -->
+    <div class="d-flex flex-column flex-md-row justify-content-between align-items-center mb-5 gap-3 px-3">
+        <h3 class="welcome-text text-white">
+            Bonjour, <span class="text-warning">{{ enseignant.nom }} {{ enseignant.prenoms }}</span>
+        </h3>
+        <a href="{% url 'enseignant_logout' %}" class="btn btn-danger btn-lg shadow">Déconnexion</a>
+    </div>
+
+    {% if classes %}
+    <!-- Classes -->
+    <div class="row row-cols-1 row-cols-sm-2 row-cols-md-3 g-4 px-3">
+        {% for classe in classes %}
+        <div class="col">
+            <div class="card h-100 text-white shadow-lg" style="background: linear-gradient(135deg, #6a11cb 0%, #2575fc 100%); border-radius: 15px;">
+                <div class="card-body p-4">
+                    <h4 class="card-title fw-bold text-center">{{ classe.nom }}</h4>
+                    <p class="mb-3 text-center">
+                        <i class="bi bi-calendar2-week me-2"></i> Année : {{ classe.annee_academique }}
+                    </p>
+
+                    <!-- Form Notes -->
+                    <form action="{% url 'inserer_notes_classe_enseignant' classe=classe.nom annee_academique=classe.annee_academique %}" method="GET">
+                        <select name="matiere" class="form-select mb-3" required>
+                            {% for m in enseignant.matieres_list %}
+                                <option value="{{ m }}">{{ m }}</option>
+                            {% endfor %}
+                        </select>
+                        <button type="submit" class="btn btn-warning w-100 fw-bold mb-3">Saisir les notes</button>
+                    </form>
+
+                    <!-- Boutons Marquer la présence pour chaque horaire -->
+                    {% for horaire in classe.horaires %}
+                    <a href="{% url 'marquer_presence' classe.nom horaire.id %}" class="btn btn-light w-100 fw-bold mb-2">
+                        Marquer la présence - {{ horaire.matiere }} ({{ horaire.jour }} {{ horaire.heure_debut|time:"H:i" }} - {{ horaire.heure_fin|time:"H:i" }})
+                    </a>
+                    {% empty %}
+                    <p class="text-center text-warning">Aucun horaire pour cette classe.</p>
+                    {% endfor %}
+
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+
+    {% else %}
+    <p class="text-center text-white fs-5 mt-5">Aucune classe assignée.</p>
+    {% endif %}
+
+</div>
+
+<!-- CSS -->
+<style>
+.dashboard-container {
+    background: linear-gradient(135deg, #1f1c2c, #928dab);
+    min-height: 100vh;
+    padding-bottom: 50px;
+}
+
+.school-name { font-family: 'Segoe UI', sans-serif; letter-spacing: 2px; }
+.card-title { font-size: 1.5rem; }
+.welcome-text { font-size: 1.4rem; }
+.btn-warning { background-color: #ffb703; border: none; color: #1f1c2c; }
+.btn-warning:hover { background-color: #fca311; color: #fff; }
+.card { transition: transform 0.3s, box-shadow 0.3s; }
+.card:hover { transform: translateY(-8px); box-shadow: 0 12px 25px rgba(0,0,0,0.3); }
+.form-select { border-radius: 8px; }
+</style>
+
+{% endblock %}

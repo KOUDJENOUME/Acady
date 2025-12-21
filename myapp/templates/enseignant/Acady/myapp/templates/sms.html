@@ -1,0 +1,52 @@
+{% extends 'base.html' %}
+{% block title %}{{ school_name }} - Récapitulatif des Résultats{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <h2 class="text-center text-primary">📊 Récapitulatif des résultats de {{ classe }}</h2>
+    <p class="text-center text-muted">Année académique : <strong>{{ annee_academique }}</strong> | Trimestre : {{ trimestre }}</p>
+
+    <table class="table table-bordered text-center mt-3">
+        <thead class="table-dark">
+            <tr>
+                <th>#</th>
+                <th>Élève</th>
+                <th>Email du parent</th>
+                <th>Notes disponibles</th>
+                <th>SMS envoyé</th>
+                <th>Email envoyé</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for item in recap %}
+            <tr>
+                <td>{{ forloop.counter }}</td>
+                <td>{{ item.eleve.nom }} {{ item.eleve.prenoms }}</td>
+                <td>{{ item.email|default:"Non enregistré" }}</td>
+                <td>
+                    {% if item.note_disponible %}
+                        <span class="badge bg-success">Oui</span>
+                    {% else %}
+                        <span class="badge bg-danger">Non</span>
+                    {% endif %}
+                </td>
+                <td>
+                    {% if item.sms %}
+                        <span class="badge bg-success">Oui</span>
+                    {% else %}
+                        <span class="badge bg-danger">Non</span>
+                    {% endif %}
+                </td>
+                <td>
+                    {% if item.email_sent %}
+                        <span class="badge bg-success">Oui</span>
+                    {% else %}
+                        <span class="badge bg-danger">Non</span>
+                    {% endif %}
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endblock %}

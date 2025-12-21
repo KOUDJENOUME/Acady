@@ -1,0 +1,304 @@
+<!DOCTYPE html>
+<html lang="fr">
+{% load static %}
+<head>
+    <meta charset="UTF-8" />
+    <link rel="icon" href="{% static 'acady.png' %}" type="image/png" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Bulletin de Notes | Acadynote</title>
+    <link href="{% static 'css/bootstrap.min.css' %}" rel="stylesheet" />
+    <style>
+        body {
+            font-size: 14px;
+            margin: 0;
+            padding: 0;
+        }
+        .container {
+            width: 100%;
+            max-width: 100%;
+            margin-left: auto;
+            margin-right: auto;
+            padding: 20px;
+            box-sizing: border-box;
+            min-height: 277mm;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            padding-bottom: 20px;
+        }
+        h4, h5, h6 {
+            text-align: center;
+            margin-bottom: 5px;
+        }
+        .text-end {
+            text-align: right;
+        }
+        .top-details, .totaux {
+            font-size: 14px;
+        }
+        .discipline-table p,
+        .decision p {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+        }
+        .signature {
+            margin-top: 10px;
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            font-size: 14px;
+        }
+        .bulletin-header p {
+            margin-bottom: 0;
+            font-size: 14px;
+        }
+        .header-info {
+            text-align: center;
+        }
+        .bulletin-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+        .header-left, .header-right {
+            width: 80px;
+            height: 80px;
+        }
+        .center-header {
+            flex-grow: 1;
+            text-align: center;
+        }
+        .profile-image {
+            width: 100%;
+            height: 100%;
+            border-radius: 50%;
+        }
+        .table {
+    margin-left: auto;
+    margin-right: auto;
+    width: 95%;
+    table-layout: fixed;
+}
+
+.table th, .table td {
+    border: 1px solid black !important;
+    padding: 5px;
+    font-size: 14px;
+    text-align: center;
+    word-wrap: break-word;
+}
+
+/* Largeurs personnalisées */
+.table th:nth-child(1), .table td:nth-child(1) {
+    width: 30%; /* Matières */
+    text-align: left;
+}
+.table th:nth-child(2), .table td:nth-child(2),
+.table th:nth-child(3), .table td:nth-child(3),
+.table th:nth-child(4), .table td:nth-child(4),
+.table th:nth-child(5), .table td:nth-child(5),
+.table th:nth-child(6), .table td:nth-child(6),
+.table th:nth-child(7), .table td:nth-child(7),
+.table th:nth-child(8), .table td:nth-child(8) {
+    width: 8%; /* Colonnes réduites */
+}
+.table th:nth-child(9), .table td:nth-child(9) {
+    width: 22%; /* Appréciations */
+    text-align: left;
+}
+
+        .observations-box {
+    border: 1px solid black !important;
+    min-height: 30px;
+    width: 80%;
+    margin: 0 auto;
+}
+.col-appreciation {
+    width: 120px; /* ajuste selon le rendu */
+    word-break: break-word;
+}
+
+
+        .footer-section {
+            margin-top: auto;
+        }
+
+        @media print {
+            @page {
+                size: A4 portrait;
+                margin: 10mm;
+            }
+            body {
+                margin: 0;
+                padding: 0;
+                -webkit-print-color-adjust: exact;
+                print-color-adjust: exact;
+            }
+            .container {
+                padding: 10mm;
+                min-height: 277mm;
+            }
+            #download-pdf {
+                display: none;
+            }
+        }
+    </style>
+</head>
+<body>
+
+<!-- Bouton Télécharger -->
+<button id="download-pdf" class="btn btn-secondary" style="margin: 10px;">Télécharger le PDF</button>
+
+<div class="container">
+    <!-- En-tête -->
+    <div class="bulletin-header">
+        <div class="header-left">
+            {% if profile_image %}
+                <img src="{{ profile_image }}" alt="Photo de profil" class="profile-image" />
+            {% endif %}
+        </div>
+        <div class="center-header">
+            <h4>{{ school_name }}</h4>
+            <p class="header-info">Tel : {{ numero }} | E-mail : {{ email }}</p>
+            <h5>BULLETIN DE NOTES</h5>
+            <h6>2<sup>ème</sup> Trimestre</h6>
+            <p class="text-end"><strong>Année scolaire :</strong> {{ eleve.annee_academique }}</p>
+        </div>
+        <div class="header-right">
+            {% if profile_image %}
+                <img src="{{ profile_image }}" alt="Photo de profil" class="profile-image" />
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Infos élève -->
+    <div class="top-details">
+        <p>
+            <strong>N° Matricule :</strong> {{ eleve.matricule }}<br />
+            <strong>Nom & Prénoms :</strong> {{ eleve.nom }} {{ eleve.prenoms }}<br />
+            <strong>Classe :</strong> {{ eleve.classe }} | <strong>Effectif :</strong> {{ total_eleve }}<br />
+            <strong>Redoublant :</strong> ☐ OUI ☐ NON
+        </p>
+    </div>
+
+    <!-- Tableau -->
+    <table class="table table-bordered mt-2">
+        <thead class="table-light">
+            <tr>
+                <th>Matières</th>
+                <th>Moy.Interro</th>
+                <th>Dev1</th>
+                <th>Dev2</th>
+                <th>Moy</th>
+                <th>Coef</th>
+                <th>Moy. Coef</th>
+                <th>Rang</th>
+                <th class="col-appreciation">Appréciations</th>
+
+            </tr>
+        </thead>
+        <tbody>
+            {% for matiere, details in matieres_status.items %}
+            <tr>
+                <td>{{ matiere }}</td>
+                <td>{% if details.moyenne_interros is not None %}{{ details.moyenne_interros|floatformat:2 }}{% endif %}</td>
+                <td>{% if details.devoirs and details.devoirs.0 is not None %}{{ details.devoirs.0 }}{% endif %}</td>
+                <td>{% if details.devoirs and details.devoirs.1 is not None %}{{ details.devoirs.1 }}{% endif %}</td>
+                <td>{% if details.moyenne_generale is not None %}{{ details.moyenne_generale|floatformat:2 }}{% else %}0.00{% endif %}</td>
+                <td>{% if details.coef is not None %}{{ details.coef }}{% endif %}</td>
+                <td>{% if details.moyenne_coef is not None %}{{ details.moyenne_coef|floatformat:2 }}{% else %}0.00{% endif %}</td>
+                <td>{% if details.rang is not None %}{{ details.rang }}{% endif %}</td>
+                <td class="col-appreciation">{% if details.appreciations is not None %}{{ details.appreciations }}{% endif %}</td>
+
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+
+    <!-- Totaux -->
+    <div class="row mt-4">
+        <div class="col-6 text-start">
+            <p>
+                <strong>Moy 2<sup>ème</sup> trim :</strong> {{ moyenne_trimestrielle|floatformat:2 }}<br />
+                <strong>Rang :</strong> {{ rang_trimestriel }}
+            </p>
+        </div>
+        <div class="col-6">
+            <p style="margin-left:20%;">
+                <strong style="white-space: nowrap;">Moyenne la plus élevée de la classe :</strong> {{ moyenne_max|floatformat:2 }}<br />
+                <strong style="white-space: nowrap;">Moyenne la plus faible de la classe :</strong> {{ moyenne_min|floatformat:2 }}
+            </p>
+        </div>
+    </div>
+
+    <!-- SECTION PIED DE PAGE -->
+    <div class="footer-section">
+        <!-- Discipline -->
+        <div class="discipline-table mt-3">
+            <h6>DISCIPLINE</h6>
+            <p>
+                ☐ Retards | ☐ Absence | ☐ Consignes | ☐ Avertissement | ☐ Blâme | ☐ Exclusion
+            </p>
+        </div>
+
+        <!-- Décision -->
+        <div class="decision mt-2">
+            <h6>DÉCISION DU CONSEIL DES PROFESSEURS</h6>
+            <p>
+                ☐ Encouragement | ☐ Tableau d'honneur | ☐ Félicitations | ☐ Avertissement - Travail | ☐ Blâme - Travail
+            </p>
+        </div>
+
+        <!-- Observations -->
+        <div class="observations mt-2">
+            <h6>OBSERVATIONS DU CHEF D'ÉTABLISSEMENT</h6>
+            <p class="border p-3 observations-box"></p>
+        </div>
+
+        <!-- Signatures -->
+        <div class="signature">
+            <div>Signature Professeur Principal</div>
+            <div style="text-align: right;margin-right: 40px; width: 250px;">
+                Porto-Novo, le .................. 20......<br />
+                <div style="height: 60px; margin: 8px 0;"></div>
+                <div style="margin-right: 50px;">{{ name }}</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- JS Bootstrap et html2pdf -->
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+<script>
+    document.getElementById("download-pdf").addEventListener("click", function () {
+        const element = document.querySelector(".container");
+
+        function sanitizeFilename(name) {
+            return name.replace(/[^a-z0-9_\-]/gi, '_').toLowerCase();
+        }
+
+        const eleveNom = "{{ eleve.nom }}_{{ eleve.prenoms }}";
+        const eleveClasse = "{{ eleve.classe }}";
+        const trimestre = "2ème_trim";
+
+        const filename = sanitizeFilename(`${eleveNom}_${eleveClasse}_${trimestre}.pdf`);
+
+        const opt = {
+            margin: 0,
+            filename: filename,
+            image: { type: "jpeg", quality: 0.98 },
+            html2canvas: { scale: 2 },
+            jsPDF: { unit: "mm", format: "a4", orientation: "portrait" },
+        };
+
+        this.style.display = "none";
+        html2pdf().set(opt).from(element).save().then(() => {
+            this.style.display = "inline-block";
+        });
+    });
+</script>
+</body>
+</html>

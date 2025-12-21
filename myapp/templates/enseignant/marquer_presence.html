@@ -1,0 +1,61 @@
+{% extends 'base.html' %}
+
+{% block title %}Marquer la présence{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <h3 class="text-center mb-4">Présence - Classe : {{ classe_nom }} ({{ horaire.matiere }})</h3>
+
+    <!-- Afficher les messages -->
+    {% if messages %}
+        {% for message in messages %}
+            <div class="alert alert-success">{{ message }}</div>
+        {% endfor %}
+    {% endif %}
+
+    <form method="POST">
+        {% csrf_token %}
+        <table class="table table-bordered text-center">
+            <thead class="table-dark">
+                <tr>
+                    <th>Nom</th>
+                    <th>Prénom</th>
+                    <th>Sexe</th>
+                    <th>Matricule</th>
+                    <th>Présent ?</th>
+                    <th>Motif d'absence</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for eleve in eleves %}
+                <tr>
+                    <td>{{ eleve.nom }}</td>
+                    <td>{{ eleve.prenoms }}</td>
+                    <td>{{ eleve.sexe }}</td>
+                    <td>{{ eleve.matricule }}</td>
+                    <td>
+                        <input type="radio" name="presence_{{ eleve.id }}" value="oui" onclick="toggleMotif({{ eleve.id }}, false)" required> Oui
+                        <input type="radio" name="presence_{{ eleve.id }}" value="non" onclick="toggleMotif({{ eleve.id }}, true)"> Non
+                    </td>
+                    <td>
+                        <input type="text" name="motif_{{ eleve.id }}" id="motif_{{ eleve.id }}" class="form-control" disabled>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+
+        <button type="submit" class="btn btn-success w-100 mb-3">Valider la présence</button>
+    </form>
+
+    <!-- Bouton retour au dashboard -->
+    <a href="{% url 'dashboard_enseignant' %}" class="btn btn-primary w-100">Retour au Dashboard</a>
+</div>
+
+<script>
+function toggleMotif(eleveId, enable) {
+    const motifInput = document.getElementById('motif_' + eleveId);
+    motifInput.disabled = !enable;
+}
+</script>
+{% endblock %}

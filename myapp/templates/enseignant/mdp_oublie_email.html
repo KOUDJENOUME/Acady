@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mot de passe oublié</title>
+    <style>
+        body { 
+            font-family: Arial, sans-serif; 
+            background: linear-gradient(135deg, #4A90E2, #50E3C2);
+            height: 100vh; display: flex; justify-content: center; align-items: center;
+        }
+        .container {
+            background: #fff; padding: 40px 30px; border-radius: 15px;
+            box-shadow: 0 8px 20px rgba(0,0,0,0.25);
+            width: 100%; max-width: 420px; text-align: center;
+        }
+        h1 { margin-bottom: 25px; color: #333; }
+        label { display: block; font-weight: bold; margin-top: 15px; text-align: left; }
+        input { width: 100%; padding: 10px; border-radius: 8px; border: 1px solid #ccc; }
+        button {
+            width: 100%; padding: 12px; margin-top: 25px;
+            background-color: #4A90E2; border: none; border-radius: 8px;
+            color: white; font-size: 18px; cursor: pointer; transition: 0.3s;
+        }
+        button:hover { background-color: #357ABD; }
+        .message { margin-bottom: 10px; font-weight: bold; }
+        .error { color: red; }
+        .success { color: green; }
+    </style>
+</head>
+<body>
+<div class="container">
+    <h1>Mot de passe oublié</h1>
+
+    {% if messages %}
+        {% for message in messages %}
+            <p class="message {{ message.tags }}">{{ message }}</p>
+        {% endfor %}
+    {% endif %}
+
+    <form method="post">
+        {% csrf_token %}
+        <label>Email</label>
+        <input type="email" name="email" required>
+
+        <button type="submit">Envoyer le code</button>
+    </form>
+</div>
+</body>
+</html>

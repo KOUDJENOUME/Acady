@@ -1,0 +1,24 @@
+{% extends 'base.html' %}
+
+{% block title %}Vérification OTP{% endblock %}
+
+{% block content %}
+<div class="container mt-5">
+    <h3>Entrez le code envoyé par email</h3>
+
+    {% if messages %}
+        {% for message in messages %}
+            <div class="alert alert-{{ message.tags }}">{{ message }}</div>
+        {% endfor %}
+    {% endif %}
+
+    <form method="post">
+        {% csrf_token %}
+        <div class="mb-3">
+            <label for="otp" class="form-label">Code OTP :</label>
+            <input type="text" name="otp" id="otp" class="form-control" maxlength="6" required>
+        </div>
+        <button type="submit" class="btn btn-primary">Valider</button>
+    </form>
+</div>
+{% endblock %}

@@ -1,0 +1,173 @@
+<!doctype html>
+<html lang="fr">
+   {% load static %}
+  <head>
+   
+    <meta charset="utf-8">
+    <link rel="icon" href="{% static 'acady.png' %}" type="image/png" />
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="stylesheet" href="{% static 'css/bootstrap.min.css' %}">
+    <title>Connexion | Acadynote</title>
+
+    <style>
+        body, html {
+            margin: 0;
+            padding: 0;
+            height: 100%;
+            font-family: Arial, sans-serif;
+            overflow: hidden;
+        }
+
+        #particles-js {
+            position: fixed;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(to right, #141e30, #243b55);
+            z-index: 0;
+        }
+
+        .form-container {
+            position: relative;
+            z-index: 1;
+            background: rgba(255,255,255,0.1); 
+            padding: 2rem; 
+            border-radius: 10px; 
+            backdrop-filter: blur(10px);
+            box-shadow: 0px 0px 10px rgba(255, 255, 255, 0.2);
+            width: 350px;
+            color: white;
+            margin: auto;
+            top: 50%;
+            transform: translateY(-50%);
+        }
+
+        .form-container h2 {
+            text-align: center;
+            margin-bottom: 1rem;
+        }
+
+        .form-control {
+            background: rgba(255, 255, 255, 0.2);
+            border: none;
+            color: white;
+        }
+
+        .form-control::placeholder {
+            color: rgba(255, 255, 255, 0.7);
+        }
+
+        .form-control:focus {
+            background: rgba(255, 255, 255, 0.3);
+        }
+
+        .btn-primary {
+            background: #007bff;
+            border: none;
+            transition: background 0.3s;
+        }
+
+        .btn-primary:hover {
+            background: #0056b3;
+        }
+
+        .btn-secondary {
+            background: rgba(255, 255, 255, 0.3);
+            border: none;
+            transition: background 0.3s;
+        }
+
+        .btn-secondary:hover {
+            background: rgba(255, 255, 255, 0.5);
+        }
+    </style>
+  </head>
+
+  <body>
+    <!-- Animation background -->
+    <div id="particles-js"></div>
+
+    <!-- Formulaire -->
+    <div class="form-container">
+        <h2>Connexion</h2>
+        <form method="post">
+            {% csrf_token %}
+            <div class="mb-3">
+                <label for="username">Nom d'utilisateur</label>
+                <input type="text" name="username" id="username" class="form-control" placeholder="Votre nom d'utilisateur" required>
+            </div>
+            <div class="mb-3">
+                <label for="password">Mot de passe</label>
+                <input type="password" name="password" id="password" class="form-control" placeholder="Votre mot de passe" required>
+            </div>
+            <button type="submit" class="btn btn-primary w-100">Se connecter</button>
+        </form>
+
+        {% if messages %}
+            {% for message in messages %}
+                <div class="alert alert-danger mt-2">{{ message }}</div>
+            {% endfor %}
+        {% endif %}
+
+        <div class="text-center mt-3">
+            <a href="{% url 'inscription' %}" class="btn btn-secondary w-100">Je n'ai pas de compte</a>
+        </div>
+        
+
+    </div>
+
+    <!-- Script pour les particules -->
+    <script src="https://cdn.jsdelivr.net/npm/particles.js@2.0.0/particles.min.js"></script>
+    <script>
+      particlesJS("particles-js", {
+        particles: {
+          number: { value: 80, density: { enable: true, value_area: 800 } },
+          color: { value: "#ffffff" },
+          shape: {
+            type: "circle",
+            stroke: { width: 0, color: "#000000" },
+            polygon: { nb_sides: 5 }
+          },
+          opacity: {
+            value: 0.3,
+            random: true,
+            anim: { enable: false }
+          },
+          size: {
+            value: 4,
+            random: true,
+            anim: { enable: false }
+          },
+          line_linked: {
+            enable: true,
+            distance: 150,
+            color: "#ffffff",
+            opacity: 0.2,
+            width: 1
+          },
+          move: {
+            enable: true,
+            speed: 1,
+            direction: "none",
+            random: false,
+            straight: false,
+            out_mode: "out",
+            bounce: false
+          }
+        },
+        interactivity: {
+          detect_on: "canvas",
+          events: {
+            onhover: { enable: true, mode: "grab" },
+            onclick: { enable: true, mode: "push" },
+            resize: true
+          },
+          modes: {
+            grab: { distance: 200, line_linked: { opacity: 0.4 } },
+            push: { particles_nb: 4 }
+          }
+        },
+        retina_detect: true
+      });
+    </script>
+  </body>
+</html>

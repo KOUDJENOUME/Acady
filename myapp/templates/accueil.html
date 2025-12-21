@@ -1,0 +1,260 @@
+<!DOCTYPE html>
+<html lang="fr">
+{% load static %}
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="icon" href="{% static 'acady.png' %}" type="image/png" />
+    <title>Acadynote</title>
+
+    <link href="{% static 'css/bootstrap.min.css' %}" rel="stylesheet">
+
+    <style>
+        :root {
+            --blue: #2563eb; /* Bleu moderne */
+        }
+
+        body {
+            background: #f9fafb;
+            font-family: "Inter", "Segoe UI", sans-serif;
+            margin: 0;
+            padding: 0;
+        }
+
+        /* NAVBAR MINIMALISTE */
+        .navbar {
+            background: var(--blue) !important;
+            height: 60px;
+        }
+
+        .navbar-brand {
+            font-weight: 700;
+            font-size: 20px;
+            color: white !important;
+            letter-spacing: -0.5px;
+        }
+
+        .btn-outline-secondary {
+            color: white !important;
+            border-color: white !important;
+        }
+
+        .btn-outline-danger {
+            color: white !important;
+            border-color: #fca5a5 !important;
+        }
+
+        /* TITRE ÉCOLE */
+        .school-title {
+            margin-top: 40px;
+            text-align: center;
+            font-size: 32px;
+            font-weight: 700;
+            color: #111;
+            letter-spacing: -1px;
+        }
+
+        /* Formulaire année */
+        .year-form {
+            max-width: 320px;
+            margin: 20px auto;
+        }
+
+        .year-form input {
+            height: 45px;
+        }
+
+        .btn-blue {
+            background: var(--blue);
+            color: white;
+        }
+
+        .btn-blue:hover {
+            background: #1e4ecb;
+            color: white;
+        }
+
+        /* CONTENEUR DES CARTES */
+        .card-container {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+            gap: 25px;
+            max-width: 1000px;
+            margin: 50px auto;
+            padding: 0 20px;
+        }
+
+        /* STYLE CARDS ULTRA MINIMALISTES */
+        .class-card {
+            background: white;
+            padding: 25px 20px;
+            border-radius: 12px;
+            border: 1px solid #e5e7eb;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.03);
+            transition: 0.2s ease;
+        }
+
+        .class-card:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 20px rgba(0,0,0,0.06);
+        }
+
+        .class-card h3 a {
+            font-size: 20px;
+            font-weight: 600;
+            color: var(--blue);
+            text-decoration: none;
+        }
+
+        .class-card h3 a:hover {
+            text-decoration: underline;
+        }
+
+        .stats {
+            font-size: 15px;
+            margin-top: 6px;
+            color: #555;
+        }
+
+        /* FOOTER MINIMALISTE */
+        footer {
+            text-align: center;
+            padding: 25px 0;
+            font-size: 14px;
+            color: #777;
+            border-top: 1px solid #e5e7eb;
+            margin-top: 60px;
+        }
+    </style>
+
+</head>
+
+<body>
+
+    <!-- NAVBAR -->
+    <nav class="navbar navbar-light d-flex align-items-center">
+        <div class="container-fluid">
+            <a class="navbar-brand" href="#">
+                <marquee behavior="scroll" direction="left">
+                    Bienvenue sur <strong>Acadynote</strong> : Votre solution intelligente pour la gestion des notes scolaires
+                </marquee>
+            </a>
+            <div>
+    <div>
+    <a href="{% url 'liste_enseignants' %}" class="btn btn-outline-light btn-sm me-2">Enseignants</a>
+    <a href="{% url 'enregistrer_eleve' %}" class="btn btn-outline-secondary btn-sm me-2">Enregistrer</a>
+    <a href="{% url 'liste_absents' %}" class="btn btn-outline-warning btn-sm me-2">Liste des absents</a>
+    <a href="{% url 'heures_mensuelles_recap' %}" class="btn btn-outline-info btn-sm me-2">Heures mensuelles</a>
+    <a href="{% url 'login' %}" class="btn btn-outline-danger btn-sm">Déconnexion</a>
+</div>
+
+</div>
+
+        </div>
+    </nav>
+
+    <!-- BOUTON ENVOYER LIEN NGROK -->
+    <div class="container mt-4" style="max-width: 400px;">
+        <form method="post" action="{% url 'envoi_lien_ngrok' %}">
+            {% if request.GET.success %}
+    <p class="message success">{{ request.GET.success }}</p>
+{% endif %}
+{% if request.GET.error %}
+    <p class="message error">{{ request.GET.error }}</p>
+{% endif %}
+
+            {% csrf_token %}
+            <button type="submit" class="btn btn-blue w-100"
+                style="
+                    padding: 12px 0;
+                    font-size: 15px;
+                    border-radius: 8px;
+                    font-weight: 500;
+                ">
+                Envoyer le lien Ngrok par mail
+            </button>
+        </form>
+    </div>
+
+    <!-- NOM DE L’ÉCOLE -->
+    <div class="school-title">
+        {{ school_name }}
+    </div>
+
+    <!-- FORM ANNEE -->
+    <form method="GET" class="year-form">
+        <div class="input-group shadow-sm">
+            <input type="text" name="annee" class="form-control" placeholder="Ex: 2024-2025" value="{{ annee_academique }}">
+            <button class="btn btn-blue" type="submit">OK</button>
+        </div>
+    </form>
+    <!-- BOUTON POUR CONSULTER LES NOTES DU JOUR -->
+<div class="container mt-4" style="max-width: 400px;">
+    <form method="GET" action="{% url 'consulter_notes' %}">
+        <div class="input-group shadow-sm">
+            <!-- Sélection de la date -->
+            <input type="date" name="date" class="form-control" required>
+
+            <!-- Sélection de la classe -->
+            <select name="classe" class="form-select" required>
+                <option value="">Choisir une classe</option>
+                <option value="6ème">6ème</option>
+                <option value="5ème">5ème</option>
+                <option value="4ème">4ème</option>
+                <option value="3ème">3ème</option>
+            </select>
+
+            <button type="submit" class="btn btn-blue"
+                style="
+                    padding: 12px 0;
+                    font-size: 15px;
+                    border-radius: 8px;
+                    font-weight: 500;
+                ">
+                Consulter
+            </button>
+        </div>
+    </form>
+</div>
+
+
+    <!-- CARTES DES CLASSES -->
+    <div class="card-container">
+
+        <div class="class-card">
+            <h3><a href="{% url 'afficher_sixieme' annee=annee_academique %}">Classe : 6ème</a></h3>
+            <div class="stats">Effectif : {{ statistiques_sixieme.total_eleves }}</div>
+            <div class="stats">Garçons : {{ statistiques_sixieme.garçons }}</div>
+            <div class="stats">Filles : {{ statistiques_sixieme.filles }}</div>
+        </div>
+
+        <div class="class-card">
+            <h3><a href="{% url 'afficher_cinquieme' annee=annee_academique %}">Classe : 5ème</a></h3>
+            <div class="stats">Effectif : {{ statistiques_cinquieme.total_eleves }}</div>
+            <div class="stats">Garçons : {{ statistiques_cinquieme.garçons }}</div>
+            <div class="stats">Filles : {{ statistiques_cinquieme.filles }}</div>
+        </div>
+
+        <div class="class-card">
+            <h3><a href="{% url 'afficher_quatrieme' annee=annee_academique %}">Classe : 4ème</a></h3>
+            <div class="stats">Effectif : {{ statistiques_quatrieme.total_eleves }}</div>
+            <div class="stats">Garçons : {{ statistiques_quatrieme.garçons }}</div>
+            <div class="stats">Filles : {{ statistiques_quatrieme.filles }}</div>
+        </div>
+
+        <div class="class-card">
+            <h3><a href="{% url 'afficher_troisieme' annee=annee_academique %}">Classe : 3ème</a></h3>
+            <div class="stats">Effectif : {{ statistiques_troisieme.total_eleves }}</div>
+            <div class="stats">Garçons : {{ statistiques_troisieme.garçons }}</div>
+            <div class="stats">Filles : {{ statistiques_troisieme.filles }}</div>
+        </div>
+
+    </div>
+
+    <!-- FOOTER -->
+    <footer>
+        &copy; 2025 <strong>Acadynote</strong> — Tous droits réservés.
+    </footer>
+
+</body>
+</html>

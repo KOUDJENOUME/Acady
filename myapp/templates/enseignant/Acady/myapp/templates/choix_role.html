@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Choix du rôle - Acadynote</title>
+
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: "Segoe UI", Arial, sans-serif;
+            background: linear-gradient(135deg, #4A90E2, #50E3C2);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+            color: white;
+        }
+
+        .container {
+            text-align: center;
+            max-width: 900px;
+            animation: fadeIn 1s ease-in-out;
+        }
+
+        /* Titre principal */
+        h1 {
+            margin-bottom: 15px;
+            font-size: 3rem;
+            font-weight: 800;
+            line-height: 1.2;
+        }
+
+        /* Sous-titre */
+        p {
+            font-size: 1.2rem;
+            margin-bottom: 50px;
+            opacity: 0.9;
+        }
+
+        /* Zone des cartes */
+        .roles {
+            display: flex;
+            justify-content: center;
+            flex-wrap: wrap;
+            gap: 30px;
+            margin-top: 20px;
+        }
+
+        /* Cartes de sélection */
+        .card {
+            background: white;
+            color: #333;
+            width: 260px;
+            padding: 35px 25px;
+            border-radius: 18px;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.25);
+            cursor: pointer;
+            transition: 0.3s;
+            font-size: 1.4rem;
+            font-weight: 700;
+            text-decoration: none;
+            display: block;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .card:hover {
+            transform: translateY(-10px);
+            box-shadow: 0 12px 30px rgba(0,0,0,0.3);
+        }
+
+        /* Effet brillant */
+        .card::after {
+            content: "";
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: rgba(255,255,255,0.2);
+            transform: rotate(30deg);
+            opacity: 0;
+            transition: 0.5s;
+        }
+
+        .card:hover::after {
+            opacity: 1;
+        }
+
+        /* Responsive */
+        @media(max-width: 768px) {
+            h1 {
+                font-size: 2.3rem;
+            }
+            p {
+                font-size: 1rem;
+            }
+            .card {
+                width: 85%;
+                font-size: 1.2rem;
+                padding: 25px;
+            }
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+
+    <h1>Bienvenue sur <strong>Acadynote</strong></h1>
+    <p>Votre solution intelligente pour la gestion des notes scolaires</p>
+
+    <p>Choisissez votre espace pour continuer</p>
+
+    <div class="roles">
+        <a href="{% url 'login' %}" class="card">Administrateur</a>
+        <a href="{% url 'enseignant_login' %}" class="card">Enseignant</a>
+    </div>
+
+</div>
+
+</body>
+</html>

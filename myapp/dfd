@@ -1,0 +1,294 @@
+from django.shortcuts import render, redirect
+from django.contrib import messages
+from .models import Eleve, Note, Login
+
+def inserer_notes_classe_view(request, classe, annee_academique):
+    eleves = Eleve.objects.filter(classe=classe, annee_academique=annee_academique)
+    user = Login.objects.first()
+    school_name = user.school_name if user else ""
+
+    if request.method == "POST":
+        matiere = request.POST.get("matiere")
+        type_note = request.POST.get("type_note")
+        trimestre = int(request.POST.get("trimestre", 1))
+
+        # Sauvegarder les notes
+        for eleve in eleves:
+            valeur = request.POST.get(f"note_{eleve.id}")
+            if valeur:
+                try:
+                    valeur = float(valeur)
+                    if not (0 <= valeur <= 20):
+                        raise ValueError("La note doit être comprise entre 0 et 20.")
+                    
+                    note_existante = Note.objects.filter(
+                        eleve=eleve, matiere=matiere, type_note=type_note,
+                        trimestre=trimestre, annee_academique=annee_academique
+                    ).first()
+
+                    if note_existante:
+                        # Ne pas écraser la note existante
+                        messages.warning(
+                            request,
+                            f"{eleve.nom} {eleve.prenoms} a déjà une note pour {type_note} en {matiere}."
+                        )
+                    else:
+                        # Créer la note seulement si elle n’existe pas
+                        Note.objects.create(
+                            eleve=eleve,
+                            matiere=matiere,
+                            type_note=type_note,
+                            valeur=valeur,
+                            trimestre=trimestre,
+                            annee_academique=annee_academique
+                        )
+                except ValueError:
+                    messages.error(request, f"Valeur invalide pour {eleve.nom} {eleve.prenoms}")
+
+        messages.success(request, "Les notes ont été enregistrées.")
+
+        # Calcul des moyennes et classement pour chaque élève
+        for eleve in eleves:
+            notes = Note.objects.filter(eleve=eleve, trimestre=trimestre, annee_academique=annee_academique)
+            matieres_status = {}
+
+            for note in notes:
+                if note.matiere not in matieres_status:
+                    matieres_status[note.matiere] = {
+                        'interros': [], 'devoirs': [],
+                        'moyenne_interros': 0, 'moyenne_devoirs': 0,
+                        'moyenne_generale': None
+                    }
+                
+                if note.type_note in ['interro1', 'interro2', 'interro3']:
+                    matieres_status[note.matiere]['interros'].append(note.valeur)
+                elif note.type_note in ['devoir1', 'devoir2']:
+                    matieres_status[note.matiere]['devoirs'].append(note.valeur)
+
+            # ✅ Calcul des moyennes par matière (version corrigée)
+            for matiere_nom, status in matieres_status.items():
+                interros = status['interros']
+                devoirs = status['devoirs']
+
+                # Moyenne d'interrogations
+                moy_interro = sum(interros) / len(interros) if interros else None
+                status['moyenne_interros'] = round(moy_interro, 2) if moy_interro is not None else 0
+
+                # Moyenne des devoirs
+                status['moyenne_devoirs'] = round(sum(devoirs)/len(devoirs), 2) if devoirs else 0
+
+                # Moyenne générale selon les règles
+                if devoirs:  # Il faut au moins un devoir
+                    total = 0
+                    compteur = 0
+
+                    if moy_interro is not None:  # Ajouter la moyenne d'interro
+                        total += moy_interro
+                        compteur += 1
+
+                    total += sum(devoirs)
+                    compteur += len(devoirs)
+
+                    status['moyenne_generale'] = round(total / compteur, 2)
+                else:
+                    # Aucun devoir → pas de moyenne générale
+                    status['moyenne_generale'] = None
+
+                # Sauvegarder dans la base
+                for note in notes.filter(matiere=matiere_nom):
+                    note.moyenne_interrogations = status['moyenne_interros']
+                    note.moyenne_devoirs = status['moyenne_devoirs']
+                    note.moyenne_generale = status['moyenne_generale']
+                    note.save()
+
+            # ✅ Calcul de la moyenne trimestrielle
+            total_pondere = 0
+            total_coeff = 0
+            for matiere, status in matieres_status.items():
+                if status['moyenne_generale'] is not None:  # on inclut la matière seulement s’il y a une moyenne
+                    coefficient = notes.filter(matiere=matiere).first().coefficient if notes.filter(matiere=matiere).exists() else 1
+                    total_pondere += status['moyenne_generale'] * coefficient
+                    total_coeff += coefficient
+
+            moyenne_trimestrielle = total_pondere / total_coeff if total_coeff > 0 else 0
+
+            # Sauvegarder la moyenne trimestrielle
+            for note in notes:
+                note.moyenne_trimestrielle = moyenne_trimestrielle
+                note.save()
+
+        # ✅ Classement des élèves
+        eleves_classe = Eleve.objects.filter(classe=classe, annee_academique=annee_academique)
+        moyennes_eleves = []
+        for e in eleves_classe:
+            notes_e = Note.objects.filter(eleve=e, trimestre=trimestre, annee_academique=annee_academique)
+            moyenne_e = notes_e.first().moyenne_trimestrielle if notes_e.exists() else 0
+            moyennes_eleves.append((e, moyenne_e))
+        moyennes_eleves.sort(key=lambda x: x[1], reverse=True)
+
+        for index, (e, _) in enumerate(moyennes_eleves):
+            rang = index + 1
+            notes_e = Note.objects.filter(eleve=e, trimestre=trimestre, annee_academique=annee_academique)
+            for note in notes_e:
+                note.rang = rang
+                note.save()
+        messages.success(request, "Les moyennes ont été calculées avec succès.")
+        return redirect('inserer_notes_classe', classe=classe, annee_academique=annee_academique)
+
+    return render(request, "inserer_note.html", {
+        "eleves": eleves,
+        "classe": classe,
+        "annee_academique": annee_academique,
+        "school_name": school_name
+    })
+
+from django.shortcuts import render, redirect, get_object_or_404
+from django.contrib import messages
+from .models import Eleve, Note, Login
+
+def modifier_note(request, classe, annee_academique):
+    eleves = Eleve.objects.filter(classe=classe, annee_academique=annee_academique).order_by("nom", "prenoms")
+    user = Login.objects.first()
+    school_name = user.school_name if user else ""
+
+    if request.method == "POST":
+        matiere = request.POST.get("matiere")
+        type_note = request.POST.get("type_note")
+        trimestre = int(request.POST.get("trimestre", 1))
+        action = request.POST.get("action")  # soit 'sauvegarder', soit 'calculer'
+
+        if action == "sauvegarder":
+            # ✅ Modifier ou créer les notes
+            for eleve in eleves:
+                valeur = request.POST.get(f"note_{eleve.id}")
+                if valeur:
+                    try:
+                        valeur = float(valeur)
+                        if not (0 <= valeur <= 20):
+                            raise ValueError("La note doit être comprise entre 0 et 20.")
+
+                        note_existante = Note.objects.filter(
+                            eleve=eleve,
+                            matiere=matiere,
+                            type_note=type_note,
+                            trimestre=trimestre,
+                            annee_academique=annee_academique
+                        ).first()
+
+                        if note_existante:
+                            note_existante.valeur = valeur
+                            note_existante.save()
+                        else:
+                            Note.objects.create(
+                                eleve=eleve,
+                                matiere=matiere,
+                                type_note=type_note,
+                                valeur=valeur,
+                                trimestre=trimestre,
+                                annee_academique=annee_academique
+                            )
+                    except ValueError:
+                        messages.error(request, f"Valeur invalide pour {eleve.nom} {eleve.prenoms}")
+
+            messages.success(request, "Les notes ont été modifiées avec succès.")
+            return redirect('modifier_notes_classe', classe=classe, annee_academique=annee_academique)
+
+        elif action == "calculer":
+            # ✅ Recalcul des moyennes (comme dans l’insertion)
+            for eleve in eleves:
+                notes = Note.objects.filter(
+                    eleve=eleve,
+                    trimestre=trimestre,
+                    annee_academique=annee_academique
+                )
+
+                matieres_status = {}
+                for note in notes:
+                    if note.matiere not in matieres_status:
+                        matieres_status[note.matiere] = {
+                            'interros': [], 'devoirs': [], 'moyenne_interros': 0,
+                            'moyenne_devoirs': 0, 'moyenne_generale': None
+                        }
+
+                    if note.type_note in ['interro1','interro2','interro3']:
+                        matieres_status[note.matiere]['interros'].append(note.valeur)
+                    elif note.type_note in ['devoir1','devoir2']:
+                        matieres_status[note.matiere]['devoirs'].append(note.valeur)
+
+                # Calcul des moyennes
+                for matiere_nom, status in matieres_status.items():
+                    interros = status['interros']
+                    devoirs = status['devoirs']
+
+                    # Moyenne interros
+                    status['moyenne_interros'] = sum(interros)/len(interros) if interros else 0
+
+                    # Moyenne devoirs
+                    status['moyenne_devoirs'] = sum(devoirs)/len(devoirs) if devoirs else 0
+
+                    # ⚙️ Nouvelle formule :
+                    # (somme des deux devoirs + moyenne interro) / 3 si 2 devoirs
+                    # sinon (devoir + moyenne interro) / 2 si un seul devoir
+                    if len(devoirs) == 2:
+                        status['moyenne_generale'] = round((sum(devoirs) + status['moyenne_interros']) / 3, 2)
+                    elif len(devoirs) == 1:
+                        status['moyenne_generale'] = round((devoirs[0] + status['moyenne_interros']) / 2, 2)
+                    else:
+                        status['moyenne_generale'] = status['moyenne_interros']
+
+                    # Sauvegarde dans la base
+                    for note in notes.filter(matiere=matiere_nom):
+                        note.moyenne_interrogations = status['moyenne_interros']
+                        note.moyenne_devoirs = status['moyenne_devoirs']
+                        note.moyenne_generale = status['moyenne_generale']
+                        note.save()
+
+                # Moyenne trimestrielle
+                total_pondere = 0
+                total_coeff = 0
+                for matiere, status in matieres_status.items():
+                    if status['moyenne_generale'] is not None:
+                        coefficient = notes.filter(matiere=matiere).first().coefficient if notes.filter(matiere=matiere).exists() else 1
+                        total_pondere += status['moyenne_generale'] * coefficient
+                        total_coeff += coefficient
+                moyenne_trimestrielle = total_pondere / total_coeff if total_coeff > 0 else 0
+
+                for note in notes:
+                    note.moyenne_trimestrielle = moyenne_trimestrielle
+                    note.save()
+
+            # Classement
+            eleves_classe = Eleve.objects.filter(classe=classe, annee_academique=annee_academique)
+            moyennes_eleves = []
+            for e in eleves_classe:
+                notes_e = Note.objects.filter(eleve=e, trimestre=trimestre, annee_academique=annee_academique)
+                moyenne_e = notes_e.first().moyenne_trimestrielle if notes_e.exists() else 0
+                moyennes_eleves.append((e, moyenne_e))
+            moyennes_eleves.sort(key=lambda x: x[1], reverse=True)
+
+            for index, (e, _) in enumerate(moyennes_eleves):
+                rang = index + 1
+                for note in Note.objects.filter(eleve=e, trimestre=trimestre, annee_academique=annee_academique):
+                    note.rang = rang
+                    note.save()
+
+            messages.success(request, "Les moyennes ont été calculées avec succès.")
+            return redirect('modifier_note', classe=classe, annee_academique=annee_academique)
+
+    # 🧮 Charger les anciennes notes
+    notes_existantes = {}
+    for eleve in eleves:
+        notes_eleves = Note.objects.filter(eleve=eleve, annee_academique=annee_academique)
+        notes_existantes[eleve.id] = {
+            f"{note.matiere}_{note.type_note}_{note.trimestre}": note.valeur
+            for note in notes_eleves
+        }
+
+    return render(request, "modifier_note.html", {
+        "eleves": eleves,
+        "classe": classe,
+        "annee_academique": annee_academique,
+        "school_name": school_name,
+        "notes_existantes": notes_existantes
+    })
+ l'ordre alpohabetoque doit etre respecte dans ces deux codes

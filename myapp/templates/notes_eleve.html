@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <title>Résultats du Trimestre {{ trimestre }} | Acadynote</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Arial, sans-serif;
+            background-color: #ffffff;
+            color: #333;
+            padding: 20px;
+        }
+
+        h2 {
+            text-align: center;
+            color: #007bff;
+        }
+
+        p {
+            font-size: 14px;
+            text-align: center;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 15px;
+            font-size: 14px;
+        }
+
+        th, td {
+            border: 1px solid #ddd;
+            text-align: center;
+            padding: 8px;
+        }
+
+        th {
+            background-color: #007bff;
+            color: white;
+        }
+
+        tr:nth-child(even) {
+            background-color: #f9f9f9;
+        }
+
+        .summary {
+            margin-top: 25px;
+            padding: 15px;
+            background-color: #007bff;
+            color: white;
+            border-radius: 8px;
+            text-align: center;
+            font-size: 16px;
+        }
+
+        .summary span {
+            display: block;
+            font-size: 18px;
+            margin-top: 5px;
+            font-weight: bold;
+        }
+
+        footer {
+            text-align: center;
+            margin-top: 25px;
+            font-size: 13px;
+            color: #555;
+        }
+
+        .notes {
+            display: inline-block;
+            background-color: #e3f2fd;
+            border-radius: 4px;
+            padding: 3px 6px;
+            margin: 1px;
+        }
+    </style>
+</head>
+<body>
+    <h2>Résultats du Trimestre {{ trimestre }}</h2>
+
+    <p>
+        <strong>Élève :</strong> {{ eleve.nom }} {{ eleve.prenoms }}<br>
+        <strong>Classe :</strong> {{ eleve.classe }}
+    </p>
+
+    <table>
+        <thead>
+            <tr>
+                <th>Matière</th>
+                <th>Interrogations</th>
+                <th>Devoirs</th>
+                <th>Moy. Générale</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for matiere, details in matieres_status.items %}
+            <tr>
+                <td>{{ matiere }}</td>
+                <td>
+                    {% if details.interros %}
+                        {% for note in details.interros %}
+                            <span class="notes">{{ note }}</span>
+                        {% endfor %}
+                    {% else %}
+                        -
+                    {% endif %}
+                </td>
+                <td>
+                    {% if details.devoirs %}
+                        {% for note in details.devoirs %}
+                            <span class="notes">{{ note }}</span>
+                        {% endfor %}
+                    {% else %}
+                        -
+                    {% endif %}
+                </td>
+                <td><strong>{{ details.moyenne_generale|default:0|floatformat:2 }}</strong></td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+
+    <div class="summary">
+        <p><strong>Moyenne Trimestrielle :</strong> <span>{{ moyenne_trimestrielle|floatformat:2 }}/20</span></p>
+        <p><strong>Rang :</strong> <span>{{ rang }}</span></p>
+        <p><strong>Appréciation :</strong> <span>{{ appreciation }}</span></p>
+    </div>
+
+    <footer>
+        Merci de votre confiance et de votre soutien dans le suivi de votre enfant.<br>
+        <strong>{{ school_name }}</strong> - Acadynote © 2025
+    </footer>
+</body>
+</html>

@@ -1,0 +1,206 @@
+<!doctype html>
+<html lang="fr">
+       {% load static %}
+  <head>
+ 
+    <meta charset="utf-8">
+    <link rel="icon" href="{% static 'acady.png' %}" type="image/png" />
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="stylesheet" href="{% static 'css/bootstrap.min.css' %}">
+
+    <title>Inscription | Acadynote</title>
+
+    <style>
+        body, html {
+            margin: 0;
+            padding: 0;
+            height: 100%;
+            font-family: Arial, sans-serif;
+            overflow: hidden;
+        }
+
+        #particles-js {
+            position: fixed;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(to right, #141e30, #243b55);
+            z-index: 0;
+        }
+
+        .form-container {
+            position: relative;
+            z-index: 1;
+            background: rgba(255,255,255,0.1); 
+            padding: 2rem; 
+            border-radius: 10px; 
+            backdrop-filter: blur(10px);
+            box-shadow: 0px 0px 10px rgba(255, 255, 255, 0.2);
+            width: 350px;
+            color: white;
+            margin: auto;
+            top: 50%;
+            transform: translateY(-50%);
+        }
+
+        .form-container h2 {
+            text-align: center;
+            margin-bottom: 1rem;
+        }
+
+        .form-control {
+            background: rgba(255, 255, 255, 0.2);
+            border: none;
+            color: white;
+        }
+
+        .form-control::placeholder {
+            color: rgba(255, 255, 255, 0.7);
+        }
+
+        .form-control:focus {
+            background: rgba(255, 255, 255, 0.3);
+        }
+
+        .btn-success {
+            background: #00c853;
+            border: none;
+            transition: background 0.3s;
+        }
+
+        .btn-success:hover {
+            background: #009624;
+        }
+
+        .reset-container {
+            position: fixed;
+            bottom: 20px;
+            left: 20px;
+            width: 50px;
+            height: 50px;
+            z-index: 2;
+        }
+
+        .reset-button {
+            opacity: 0;
+            transition: opacity 0.3s;
+        }
+
+        .reset-container:hover .reset-button {
+            opacity: 1;
+        }
+    </style>
+
+    <script>
+        function confirmReset() {
+            if (confirm("Êtes-vous sûr de vouloir supprimer tous les comptes ? Cette action est irréversible.")) {
+                window.location.href = "{% url 'reset_utilisateurs' %}";
+            }
+        }
+    </script>
+  </head>
+
+  <body>
+    <!-- Animation -->
+    <div id="particles-js"></div>
+
+    <!-- Formulaire -->
+    <div class="form-container">
+        <h2>Inscription</h2>
+        <form method="post" enctype="multipart/form-data">
+            {% csrf_token %}
+            <div class="mb-3">
+                <label for="username">Nom d'utilisateur</label>
+                <input type="text" name="username" id="username" class="form-control" placeholder="Votre nom d'utilisateur" required>
+            </div>
+            <div class="mb-3">
+                <label for="name">Nom du Fondateur </label>
+                <input type="text" name="name" id="name" class="form-control" placeholder="Nom du Fondateur" required>
+            </div>
+            <div class="mb-3">
+                <label for="school_name">Nom de l'école</label>
+                <input type="text" name="school_name" id="school_name" class="form-control" placeholder="Nom de votre école" required>
+            </div>
+            <div class="mb-3">
+                <label for="email">Email</label>
+                <input type="email" name="email" id="email" class="form-control" placeholder="Email" required>
+            </div>
+            <div class="mb-3">
+                <label for="numero">Numéro de téléphone</label>
+                <input type="text" name="numero" id="numero" class="form-control" placeholder="Numéro" required>
+            </div>
+            <div class="mb-3">
+                <label for="profile_image">Logo de votre école</label>
+                <input type="file" name="profile_image" id="profile_image" class="form-control" accept="image/*">
+            </div>
+            <div class="mb-3">
+    <label for="coin_droit">Image coin supérieur droit (recto)</label>
+    <input type="file" name="coin_droit" id="coin_droit" class="form-control" accept="image/*">
+</div>
+
+<div class="mb-3">
+    <label for="fond_verso">Image de fond (verso)</label>
+    <input type="file" name="fond_verso" id="fond_verso" class="form-control" accept="image/*">
+</div>
+
+            <div class="mb-3">
+                <label for="password">Mot de passe</label>
+                <input type="password" name="password" id="password" class="form-control" placeholder="Votre mot de passe" required>
+            </div>
+            <button type="submit" class="btn btn-success w-100">S'inscrire</button>
+        </form>
+
+        {% if messages %}
+            {% for message in messages %}
+                <div class="alert alert-danger mt-2">{{ message }}</div>
+            {% endfor %}
+        {% endif %}
+    </div>
+
+    <!-- Bouton reset -->
+    <div class="reset-container">
+        <button class="btn btn-danger reset-button" onclick="confirmReset()">•</button>
+    </div>
+
+    <!-- Script animation -->
+    <script src="https://cdn.jsdelivr.net/npm/particles.js@2.0.0/particles.min.js"></script>
+    <script>
+      particlesJS("particles-js", {
+        particles: {
+          number: { value: 80, density: { enable: true, value_area: 800 } },
+          color: { value: "#ffffff" },
+          shape: { type: "circle" },
+          opacity: { value: 0.3, random: true },
+          size: { value: 4, random: true },
+          line_linked: {
+            enable: true,
+            distance: 150,
+            color: "#ffffff",
+            opacity: 0.2,
+            width: 1
+          },
+          move: {
+            enable: true,
+            speed: 1,
+            direction: "none",
+            random: false,
+            straight: false,
+            out_mode: "out"
+          }
+        },
+        interactivity: {
+          detect_on: "canvas",
+          events: {
+            onhover: { enable: true, mode: "grab" },
+            onclick: { enable: true, mode: "push" },
+            resize: true
+          },
+          modes: {
+            grab: { distance: 200, line_linked: { opacity: 0.4 } },
+            push: { particles_nb: 4 }
+          }
+        },
+        retina_detect: true
+      });
+    </script>
+  </body>
+</html>

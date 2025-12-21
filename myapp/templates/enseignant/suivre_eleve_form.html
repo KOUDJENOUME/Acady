@@ -1,0 +1,52 @@
+{% extends "base.html" %}
+
+{% block title %}Suivre un élève{% endblock %}
+
+{% block content %}
+
+<div class="container py-5">
+
+    <div class="mx-auto" style="max-width: 500px;">
+
+        <div class="card shadow-lg" style="border-radius: 15px;">
+            <div class="card-body p-4">
+
+                <h3 class="text-center mb-4 fw-bold text-primary">
+                    🔍 Suivre un élève
+                </h3>
+
+                <form method="GET" action="{% url 'suivre_eleve_resultat' %}">
+                    
+                    <!-- Numéro EducMaster -->
+                    <div class="mb-4">
+                        <label class="form-label fw-bold">Numéro EducMaster :</label>
+                        <input type="text" name="educmaster" class="form-control" required
+                               placeholder="">
+                    </div>
+
+                    <!-- Sélection du trimestre -->
+                    <div class="mb-4">
+                        <label class="form-label fw-bold">Sélectionnez le trimestre :</label>
+                        <select name="trimestre" class="form-select" required>
+                            <option value="">-- Choisir un trimestre --</option>
+                            <option value="1">1er trimestre</option>
+                            <option value="2">2ème trimestre</option>
+                            <option value="3">3ème trimestre</option>
+                        </select>
+                    </div>
+
+                    <!-- Bouton -->
+                    <button type="submit" class="btn btn-primary w-100 fw-bold">
+                        Valider
+                    </button>
+
+                </form>
+
+            </div>
+        </div>
+
+    </div>
+
+</div>
+
+{% endblock %}

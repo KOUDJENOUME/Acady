@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Vérification du Code</title>
+    <style>
+        body { font-family: Arial, sans-serif; background: linear-gradient(135deg,#50E3C2,#4A90E2);
+            height: 100vh; display: flex; justify-content: center; align-items: center; }
+        .container { background:white; padding:40px 30px; border-radius:15px;
+            width:100%; max-width:420px; text-align:center; box-shadow:0 8px 20px rgba(0,0,0,0.25); }
+        h1 { margin-bottom:20px; }
+        input { width:100%; padding:12px; border-radius:8px; margin-top:10px; border:1px solid #ccc; font-size:18px; text-align:center; }
+        button { width:100%; padding:12px; margin-top:20px; background:#50E3C2; color:white; border:none; border-radius:8px; font-size:18px; cursor:pointer; }
+        button:hover { background:#3ABFA1; }
+    </style>
+</head>
+<body>
+<div class="container">
+
+    <h1>Vérification du code</h1>
+
+    {% for message in messages %}
+        <p class="{{ message.tags }}">{{ message }}</p>
+    {% endfor %}
+
+    <form method="post">
+        {% csrf_token %}
+        <input type="text" name="otp" maxlength="6" placeholder="Entrez le code reçu" required>
+        <button type="submit">Vérifier</button>
+    </form>
+</div>
+</body>
+</html>

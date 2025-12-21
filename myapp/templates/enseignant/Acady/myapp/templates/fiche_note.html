@@ -1,0 +1,168 @@
+{% extends 'base.html' %}
+
+{% block title %} Liste des élèves de la {{ classe }} {% endblock title %}
+
+{% block content %}
+<nav class="navbar navbar-expand-lg navbar-light bg-light">
+    <div class="container-fluid">
+        <a class="navbar-brand mx-auto" href="{% url 'accueil' %}"><strong>{{ school_name }}</strong></a>
+    </div>
+</nav>
+
+<!-- Bouton de téléchargement -->
+<div class="container mt-3 text-center">
+    <button id="download-pdf" class="btn btn-primary">Télécharger la fiche en PDF</button>
+</div>
+
+<!-- Contenu à exporter -->
+<div class="container mt-4" id="pdf-content">
+    {% if page_obj.number == 1 %}
+    <div class="text-center mb-2">
+        <h4><strong>{{ school_name }}</strong></h4>
+    </div>
+    <div class="text-center mb-3">
+        <h3>Fiche de notes des élèves</h3>
+    </div>
+    <div class="d-flex justify-content-between">
+        <span><strong>Classe :</strong> {{ classe }}</span>
+        <span><strong>Année scolaire :</strong> {{ annee_academique }}</span>
+    </div>
+    <div class="mt-2">
+        <span><strong>Matière :</strong> ............................................................</span>
+    </div>
+    <div class="d-flex justify-content-between mt-2">
+        <span><strong>Trimestre :</strong> ......</span>
+        <span><strong>Coefficient:</strong> .....</span>
+    </div>
+    {% endif %}
+
+    <table class="table table-bordered text-center mt-4 w-100" style="font-size: 10px; table-layout: fixed;">
+        <thead>
+            <tr>
+                <th style="width: 7%;">N°</th>
+                <th style="width: 23%;">Nom et Prénoms</th>
+                <th style="width: 5%;">Sexe</th>
+                <th style="width: 6%;">Int 1</th>
+                <th style="width: 6%;">Int 2</th>
+                <th style="width: 6%;">Int 3</th>
+                <th style="width: 7%;">Moy. Int</th>
+                <th style="width: 7%;">Dev 1</th>
+                <th style="width: 7%;">Dev 2</th>
+                <th style="width: 10%;">Moy. Dev</th>
+                <th style="width: 14%;">Moy. Générale</th>
+                <th style="width: 6%;">Rang</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for eleve in eleves %}
+            <tr style="page-break-inside: avoid;">
+                <td>{{ eleve.numero_global }}</td>
+                <td>{{ eleve.nom }} {{ eleve.prenoms }}</td>
+                <td>{{ eleve.sexe }}</td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+
+    {% if page_obj.paginator.num_pages > 1 %}
+    <!-- Pagination -->
+    <div class="pagination">
+        <nav aria-label="Page navigation">
+            <ul class="pagination justify-content-center">
+                {% for num in page_obj.paginator.page_range %}
+                <li class="page-item {% if page_obj.number == num %}active{% endif %}">
+                    <a class="page-link" href="?page={{ num }}">
+                        {{ num }}
+                    </a>
+                </li>
+                {% endfor %}
+            </ul>
+        </nav>
+    </div>
+    {% endif %}
+</div>
+
+<!-- Script PDF -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+<script>
+    document.getElementById("download-pdf").addEventListener("click", function () {
+        const element = document.getElementById("pdf-content");
+
+        const opt = {
+            margin: [5, 5, 5, 5], // top, right, bottom, left
+            filename: 'fiche_notes_{{ classe }}.pdf',
+            image: { type: 'jpeg', quality: 0.98 },
+            html2canvas: { scale: 2 },
+            jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
+        };
+
+        html2pdf().set(opt).from(element).save();
+    });
+</script>
+
+{% block extra_css %}
+<style>
+    @media print {
+        @page {
+            size: A4 portrait;
+            margin: 10mm 8mm 6mm 8mm;
+        }
+
+        body {
+            font-family: Arial, sans-serif;
+            font-size: 10pt;
+            margin: 0;
+        }
+
+        .pagination, #download-pdf {
+            display: none !important;
+        }
+
+        h3 {
+            text-align: center;
+            font-size: 14pt;
+            margin-bottom: 8px;
+        }
+
+        h4 {
+            text-align: center;
+            font-size: 13pt;
+            margin-bottom: 6px;
+        }
+
+        .d-flex {
+            display: flex;
+            justify-content: space-between;
+            font-size: 11px;
+            margin-bottom: 4px;
+        }
+
+        .table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 10px;
+        }
+
+        th, td {
+            border: 1px solid #000;
+            padding: 2px;
+            text-align: center;
+        }
+
+        tr {
+            page-break-inside: avoid;
+        }
+    }
+</style>
+{% endblock extra_css %}
+
+{% endblock content %}

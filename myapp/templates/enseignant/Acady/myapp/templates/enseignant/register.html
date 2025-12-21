@@ -1,0 +1,210 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Créer un compte Enseignant</title>
+
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #50E3C2, #4A90E2);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            background: #fff;
+            padding: 40px 30px;
+            border-radius: 20px;
+            box-shadow: 0 12px 30px rgba(0,0,0,0.25);
+            width: 100%;
+            max-width: 500px;
+            animation: fadeIn 0.5s ease-in-out;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(15px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        h1 {
+            text-align: center;
+            margin-bottom: 25px;
+            color: #333;
+            font-size: 28px;
+            letter-spacing: 1px;
+        }
+
+        label {
+            font-weight: bold;
+            display: block;
+            margin-top: 15px;
+            color: #555;
+        }
+
+        input[type="text"], input[type="email"], input[type="password"], select {
+            width: 100%;
+            padding: 12px 15px;
+            margin-top: 6px;
+            border: 1px solid #ccc;
+            border-radius: 10px;
+            font-size: 16px;
+            transition: all 0.3s ease;
+        }
+
+        input:focus, select:focus {
+            border-color: #4A90E2;
+            outline: none;
+            box-shadow: 0 0 8px rgba(74,144,226,0.4);
+        }
+
+        .checkbox-group label {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-top: 8px;
+            font-size: 15px;
+            font-weight: normal;
+        }
+
+        button {
+            width: 100%;
+            padding: 15px;
+            margin-top: 25px;
+            background-color: #4A90E2;
+            border: none;
+            border-radius: 10px;
+            color: white;
+            font-size: 18px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+        }
+
+        button:hover {
+            background-color: #357ABD;
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(0,0,0,0.25);
+        }
+
+        .login-link {
+            text-align: center;
+            margin-top: 15px;
+            font-size: 15px;
+        }
+
+        .login-link a {
+            color: #4A90E2;
+            font-weight: bold;
+            text-decoration: none;
+        }
+
+        .login-link a:hover { text-decoration: underline; }
+
+        .message { text-align: center; margin-bottom: 10px; font-weight: bold; }
+        .error { color: #e74c3c; }
+        .success { color: #27ae60; }
+
+        /* RESPONSIVE */
+        @media (max-width: 480px) {
+            .container { padding: 30px 20px; border-radius: 15px; }
+            h1 { font-size: 24px; }
+            input, select { font-size: 14px; padding: 10px; }
+            button { font-size: 16px; padding: 12px; }
+        }
+    </style>
+</head>
+
+<body>
+<div class="container">
+    <h1>Créer un compte Enseignant</h1>
+
+    {% if error %}
+        <p class="message error">{{ error }}</p>
+    {% endif %}
+    {% if success %}
+        <p class="message success">{{ success }}</p>
+    {% endif %}
+
+    <form method="post">
+        {% csrf_token %}
+
+        <label>Nom</label>
+        <input type="text" name="nom" required>
+
+        <label>Prénoms</label>
+        <input type="text" name="prenoms" required>
+
+        <label>Email</label>
+        <input type="email" name="email" required>
+
+        <label>Mot de passe</label>
+        <input type="password" name="password" required>
+
+        <div class="checkbox-group" style="margin-top:10px;">
+            <label><input type="checkbox" id="len" disabled> Au moins 8 caractères</label>
+            <label><input type="checkbox" id="letter" disabled> Contient une lettre</label>
+            <label><input type="checkbox" id="digit" disabled> Contient un chiffre</label>
+            <label><input type="checkbox" id="special" disabled> Contient un caractère spécial</label>
+        </div>
+
+        <label>Matières enseignées</label>
+        <div class="checkbox-group">
+            <label><input type="checkbox" name="matieres" value="Communication-Ecrite"> Communication-Écrite</label>
+            <label><input type="checkbox" name="matieres" value="Lecture"> Lecture</label>
+            <label><input type="checkbox" name="matieres" value="Histoire-Géographie"> Histoire-Géographie</label>
+            <label><input type="checkbox" name="matieres" value="Mathématiques"> Mathématiques</label>
+            <label><input type="checkbox" name="matieres" value="PCT"> PCT</label>
+            <label><input type="checkbox" name="matieres" value="SVT"> SVT</label>
+            <label><input type="checkbox" name="matieres" value="Anglais"> Anglais</label>
+            <label><input type="checkbox" name="matieres" value="Informatique"> Informatique</label>
+            <label><input type="checkbox" name="matieres" value="EPS"> EPS</label>
+            <label><input type="checkbox" name="matieres" value="Conduite"> Conduite</label>
+            <label><input type="checkbox" name="matieres" value="Espagnol"> Espagnol</label>
+
+        </div>
+
+        <label>Année académique</label>
+        <input type="text" name="annee_academique" placeholder="2025-2026" required>
+
+        <label>Classes enseignées</label>
+        <div class="checkbox-group">
+            <label><input type="checkbox" name="classes" value="6ème"> 6ème</label>
+            <label><input type="checkbox" name="classes" value="5ème"> 5ème</label>
+            <label><input type="checkbox" name="classes" value="4ème"> 4ème</label>
+            <label><input type="checkbox" name="classes" value="3ème"> 3ème</label>
+        </div>
+
+        <button type="submit">Créer mon compte</button>
+    </form>
+
+    <p class="login-link">
+        Déjà un compte ? <a href="{% url 'enseignant_login' %}">Se connecter</a>
+    </p>
+</div>
+
+<script>
+function checkPassword() {
+    const pwd = document.querySelector('input[name="password"]').value;
+
+    document.getElementById("len").checked = pwd.length >= 8;
+    document.getElementById("letter").checked = /[A-Za-z]/.test(pwd);
+    document.getElementById("digit").checked = /\d/.test(pwd);
+    document.getElementById("special").checked = /[!@#$%^&*(),.?":{}|<>]/.test(pwd);
+}
+document.querySelector('input[name="password"]').addEventListener('input', checkPassword);
+</script>
+
+</body>
+</html>

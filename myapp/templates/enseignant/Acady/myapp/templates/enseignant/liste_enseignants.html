@@ -1,0 +1,96 @@
+{% extends "base.html" %}
+
+{% block title %}Liste des Enseignants et Planning{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    
+        <a class="navbar-brand mx-auto" href="{% url 'accueil' %}">
+            <strong>CEPG LE TRESOR DE DOWA</strong>
+        </a>
+    <h3 class="text-center mb-4">Liste des Enseignants</h3>
+
+    <div class="table-responsive">
+        <table class="table table-bordered table-striped table-hover text-center">
+            <thead class="table-dark">
+                <tr>
+                    <th>#</th>
+                    <th>Nom</th>
+                    <th>Prénoms</th>
+                    <th>Email</th>
+                    <th>Matière</th>
+                    <th>Classes</th>
+                    <th>Année Académique</th>
+                    <th>Action</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for e in enseignants %}
+                <tr>
+                    <td>{{ forloop.counter }}</td>
+                    <td>{{ e.nom }}</td>
+                    <td>{{ e.prenoms }}</td>
+                    <td>{{ e.email }}</td>
+                    <td>{{ e.matiere }}</td>
+                    <td>{{ e.classes }}</td>
+                    <td>{{ e.annee_academique }}</td>
+                    <td>
+                        <div class="d-flex justify-content-center gap-1">
+                            <a href="{% url 'ajouter_horaire' e.id %}" class="btn btn-primary btn-sm">Ajouter Horaire</a>
+                            <a href="{% url 'modifier_horaire' e.id %}" class="btn btn-warning btn-sm">Modifier Horaire</a>
+                            <a href="{% url 'supprimer_enseignant' e.id %}" class="btn btn-danger btn-sm"
+                               onclick="return confirm('Voulez-vous vraiment supprimer cet enseignant ?');">Supprimer</a>
+                        </div>
+                    </td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="8" class="text-center">Aucun enseignant enregistré.</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+    <hr class="my-5">
+
+    <h3 class="text-center mb-4">Planning complet de l'école</h3>
+
+    <div class="table-responsive">
+        <table class="table table-bordered table-striped table-hover text-center">
+            <thead class="table-dark">
+                <tr>
+                    <th>Classe</th>
+                    <th>Jour</th>
+                    <th>Heure début</th>
+                    <th>Heure fin</th>
+                    <th>Matière</th>
+                    <th>Enseignant</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% regroup horaires by classe as horaires_par_classe %}
+                {% for group_classe in horaires_par_classe %}
+                    {% regroup group_classe.list by jour as horaires_par_jour %}
+                    {% for group_jour in horaires_par_jour %}
+                        {% for horaire in group_jour.list %}
+                        <tr>
+                            {% if forloop.first and forloop.parentloop.first %}
+                                <td rowspan="{{ group_classe.list|length }}">{{ group_classe.grouper }}</td>
+                            {% endif %}
+                            {% if forloop.first %}
+                                <td rowspan="{{ group_jour.list|length }}">{{ group_jour.grouper }}</td>
+                            {% endif %}
+                            <td>{{ horaire.heure_debut|time:"H:i" }}</td>
+                            <td>{{ horaire.heure_fin|time:"H:i" }}</td>
+                            <td>{{ horaire.matiere }}</td>
+                            <td>{{ horaire.enseignant.nom }} {{ horaire.enseignant.prenoms }}</td>
+                        </tr>
+                        {% endfor %}
+                    {% endfor %}
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}

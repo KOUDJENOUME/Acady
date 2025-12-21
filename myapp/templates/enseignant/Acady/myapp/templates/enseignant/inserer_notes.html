@@ -1,0 +1,137 @@
+{% extends 'base.html' %}
+{% block title %}Insérer les notes - Classe {{ classe }}{% endblock %}
+
+{% block content %}
+<nav class="navbar navbar-expand-lg navbar-dark bg-primary mb-4">
+    <div class="container-fluid">
+        <a class="navbar-brand mx-auto" href="{% url 'dashboard_enseignant' %}">
+            <strong>{{ school_name }}</strong>
+        </a>
+    </div>
+    <div class="container-fluid">
+        <span class="navbar-text text-white">
+            Insérer les notes - Classe {{ classe }} ({{ annee_academique }}) - Matière : {{ matiere_choisie }}
+        </span>
+    </div>
+</nav>
+
+<div class="container">
+
+    <!-- Boutons d'action -->
+    <div class="d-flex justify-content-between mb-4">
+        <a href="{% url 'fiche_notes_detail_enseignant' classe=classe annee_academique=annee_academique %}?matiere={{ matiere_choisie }}&trimestre={{ trimestre }}"
+           class="btn btn-info">
+           📄 Voir la fiche de notes
+        </a>
+
+        <div>
+            <span class="badge bg-secondary fs-6">Trimestre actuel : {{ trimestre }}</span>
+        </div>
+    </div>
+
+    <form method="POST">
+        {% csrf_token %}
+        {% if messages %}
+            {% for message in messages %}
+                <div class="alert alert-danger text-center">{{ message }}</div>
+            {% endfor %}
+        {% endif %}
+
+        <div class="row mb-3">
+            <div class="col-md-4">
+                <label>Type de note :</label>
+                <select name="type_note" class="form-select" required>
+                    {% for tn in type_notes %}
+                        <option value="{{ tn }}" {% if tn == type_note %}selected{% endif %}>{{ tn|capfirst }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-md-4">
+                <label>Trimestre :</label>
+                <input type="number" name="trimestre" class="form-control" min="1" max="3" value="{{ trimestre }}" required>
+            </div>
+        </div>
+
+        <div class="table-responsive">
+            <table class="table table-striped table-bordered align-middle text-center">
+                <thead class="table-dark">
+                    <tr>
+                        <th>N°</th>
+                        <th>Nom & Prénoms</th>
+                        <th>Sexe</th>
+                        <th>Note</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for eleve in eleves %}
+                    <tr>
+                        <td>{{ forloop.counter }}</td>
+                        <td class="text-start">{{ eleve.nom }} {{ eleve.prenoms }}</td>
+                        <td>{{ eleve.sexe }}</td>
+                        <td>
+                            <input type="text" name="note_{{ eleve.id }}" 
+                                   class="form-control note-input"
+                                   placeholder="0-20"
+                                   value="{{ notes_existantes.eleve.id.type_note_1|default:'' }}">
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+        <div class="text-center mt-4">
+            <button type="submit" class="btn btn-success btn-lg me-3">💾 Sauvegarder les notes</button>
+            <a href="{% url 'dashboard_enseignant' %}" class="btn btn-secondary btn-lg">🏠 Retour au dashboard</a>
+        </div>
+    </form>
+</div>
+<script>
+document.addEventListener("DOMContentLoaded", function() {
+    const inputs = Array.from(document.querySelectorAll('.note-input'));
+
+    inputs.forEach((input, index) => {
+        input.addEventListener('keydown', (e) => {
+            const key = e.key;
+
+            // Aller au champ suivant
+            if (key === 'Enter' || key === 'ArrowDown') {
+                e.preventDefault();
+                if (index + 1 < inputs.length) {
+                    inputs[index + 1].focus();
+                    inputs[index + 1].select();
+                }
+            }
+
+            // Aller au champ précédent
+            if (key === 'ArrowUp') {
+                e.preventDefault();
+                if (index - 1 >= 0) {
+                    inputs[index - 1].focus();
+                    inputs[index - 1].select();
+                }
+            }
+
+            // Flèche droite = même ligne mais prochaine colonne (inutile ici mais prêt pour extension)
+            if (key === 'ArrowRight') {
+                e.preventDefault();
+                if (index + 1 < inputs.length) {
+                    inputs[index + 1].focus();
+                    inputs[index + 1].select();
+                }
+            }
+
+            // Flèche gauche = revenir au précédent
+            if (key === 'ArrowLeft') {
+                e.preventDefault();
+                if (index - 1 >= 0) {
+                    inputs[index - 1].focus();
+                    inputs[index - 1].select();
+                }
+            }
+        });
+    });
+});
+</script>
+
+{% endblock %}

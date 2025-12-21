@@ -1,0 +1,234 @@
+<!DOCTYPE html>
+<html lang="fr">
+{% load static %}
+<head>
+    <meta charset="UTF-8">
+    <link rel="icon" href="{% static 'acady.png' %}" type="image/png" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tableau des Moyennes</title>
+    <link href="{% static 'css/bootstrap.min.css' %}" rel="stylesheet">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+
+    <style>
+        body {
+            font-family: 'Roboto', sans-serif;
+            background-color: transparent;
+            margin: 0;
+        }
+
+        #content {
+            padding: 10px;
+        }
+
+        .container {
+            margin-top: 0;
+            padding: 5px;
+            border-radius: 8px;
+        }
+
+        h2 {
+            text-align: center;
+            margin: 6px 0;
+            font-size: 17px;
+        }
+
+        .table th, .table td {
+            border: 1px solid black;
+            padding: 3px 2px;
+            font-size: 12px;
+            text-align: center;
+            vertical-align: middle;
+        }
+
+        .table th:first-child,
+        .table td:first-child {
+            width: 18px;
+        }
+
+        .table th:nth-child(2),
+        .table td:nth-child(2) {
+            width: 120px;
+        }
+
+        .table th[colspan="3"] {
+            font-size: 12px;
+        }
+
+        .summary p, .legend p {
+            font-size: 12px;
+            margin: 2px 0;
+        }
+
+        .row.summary {
+            margin-top: 10px;
+        }
+
+        .legend {
+            text-align: center;
+            margin-top: 5px;
+        }
+
+        .d-flex {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin: 5px 0;
+        }
+
+        .left-image, .right-image {
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            overflow: hidden;
+        }
+
+        .left-image img, .right-image img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .print-button {
+            text-align: center;
+            margin: 5px 0;
+        }
+
+        footer {
+            font-size: 14px;
+            margin-top: 8px;
+        }
+    </style>
+</head>
+<body>
+    <div class="print-button">
+        <button onclick="downloadPDF()" class="btn btn-secondary">Télécharger en PDF</button>
+    </div>
+
+    <div id="content">
+        <div class="d-flex">
+            <div class="left-image">
+                {% if profile_image %}
+                <img src="{{ profile_image }}" alt="Image gauche">
+                {% endif %}
+            </div>
+            <div class="text-center">
+                <div style="margin-top: 20px;">
+                    <h2>{{ school_name }}</h2>
+                    {% if page_obj.number == 1 %}
+                    <div class="container">
+                        <h2>Moyennes - Classe {{ classe }} - {{ annee_academique }}</h2>
+                        <h2>Trimestre 2</h2>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+            <div class="right-image">
+                {% if profile_image %}
+                <img src="{{ profile_image }}" alt="Image droite">
+                {% endif %}
+            </div>
+        </div>
+
+        <div class="container-fluid">
+            <table class="table table-bordered">
+                <thead>
+                    <tr>
+                        <th>#</th>
+                        <th>Nom & Prénoms</th>
+                        {% for matiere in order_of_subjects %}
+                            <th colspan="3">{{ matiere }}</th>
+                        {% endfor %}
+                        <th>MT</th>
+                        <th>Rang</th>
+                    </tr>
+                    <tr>
+                        <th></th>
+                        <th></th>
+                        {% for matiere in order_of_subjects %}
+                            <th>MInt</th>
+                            <th>MDev</th>
+                            <th>MGen</th>
+                        {% endfor %}
+                        <th>MT</th>
+                        <th>Rang</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for resultat in page_obj %}
+                        <tr>
+                            <td>{{ forloop.counter0|add:page_obj.start_index }}</td>
+                            <td>{{ resultat.eleve.nom }} {{ resultat.eleve.prenoms }}</td>
+                            {% for matiere, details in resultat.matieres_status.items %}
+                                <td>{{ details.moyenne_interros|default_if_none:""|floatformat:2 }}</td>
+                                <td>{{ details.moyenne_devoirs|default_if_none:""|floatformat:2 }}</td>
+                                <td>{{ details.moyenne_generale|default_if_none:""|floatformat:2 }}</td>
+                            {% endfor %}
+                            <td>{{ resultat.moyenne_trimestrielle|default_if_none:""|floatformat:2 }}</td>
+                            <td>{{ resultat.rang }}</td>
+                        </tr>
+                    {% empty %}
+                        <tr>
+                            <td colspan="100%">Aucun élève trouvé</td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+        {% if not page_obj.has_next %}
+        <div class="row summary">
+            <div class="col-md-6 text-start">
+                <p><strong>Moyenne la plus forte :</strong> {{ moyenne_max|floatformat:2 }}</p>
+                <p><strong>Moyenne la plus faible :</strong> {{ moyenne_min|floatformat:2 }}</p>
+            </div>
+            <div class="col-md-6 text-end">
+                <p><strong>Nombre d'élèves ayant une moyenne ≥ 10 :</strong> {{ nb_moyenne_sup10 }}</p>
+                <p><strong>Nombre d'élèves ayant une moyenne &lt; 10 :</strong> {{ nb_moyenne_inf10 }}</p>
+            </div>
+        </div>
+        <div class="legend">
+            <p>MInt = Moyenne Interro, MDev = Moyenne Devoir, MGen = Moyenne Générale</p>
+        </div>
+        {% endif %}
+
+        <footer class="text-center p-2">
+            &copy; 2025 <strong>Acadynote</strong>, Tous droits réservés.
+        </footer>
+    </div>
+
+    <script>
+    async function downloadPDF() {
+        const { jsPDF } = window.jspdf;
+        const content = document.getElementById("content");
+
+        const canvas = await html2canvas(content, {
+            scale: 2,
+            useCORS: true,
+            scrollY: -window.scrollY,
+            windowWidth: document.body.scrollWidth
+        });
+
+        const imgData = canvas.toDataURL("image/png");
+        const pdf = new jsPDF("landscape", "mm", "a4");
+
+        const pageWidth = pdf.internal.pageSize.getWidth();
+        const pageHeight = pdf.internal.pageSize.getHeight();
+
+        const imgWidth = pageWidth;
+        const imgHeight = (canvas.height * imgWidth) / canvas.width;
+
+        let position = 0;
+        const margin = 10; // marge entre les pages
+
+        while (position < imgHeight) {
+            pdf.addImage(imgData, "PNG", 0, -position, imgWidth, imgHeight);
+            position += (pageHeight - margin);
+            if (position < imgHeight) pdf.addPage();
+        }
+
+        pdf.save("tableau_moyennes-Trimestre1-{{classe}}.pdf");
+    }
+    </script>
+</body>
+</html>

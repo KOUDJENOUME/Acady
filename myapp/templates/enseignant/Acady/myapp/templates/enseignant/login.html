@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Connexion Enseignant</title>
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body { font-family: Arial, sans-serif; background: linear-gradient(135deg, #4A90E2, #50E3C2); display: flex; justify-content: center; align-items: center; height: 100vh; }
+        .container { background: #fff; padding: 40px 30px; border-radius: 15px; box-shadow: 0 8px 20px rgba(0,0,0,0.25); width: 100%; max-width: 400px; }
+        h1 { text-align: center; margin-bottom: 25px; color: #333; font-size: 28px; }
+        label { font-weight: bold; margin-top: 12px; display: block; color: #555; }
+        input[type="email"], input[type="password"] { width: 100%; padding: 10px 12px; margin-top: 6px; border: 1px solid #ccc; border-radius: 8px; font-size: 16px; }
+        button { width: 100%; padding: 12px; margin-top: 20px; background-color: #50E3C2; border: none; border-radius: 8px; color: white; font-size: 18px; cursor: pointer; transition: background-color 0.3s ease; }
+        button:hover { background-color: #3ABFA1; }
+        .register-link { text-align: center; margin-top: 15px; font-size: 15px; }
+        .register-link a { color: #50E3C2; text-decoration: none; font-weight: bold; }
+        .register-link a:hover { text-decoration: underline; }
+        .message { text-align: center; margin-bottom: 10px; font-weight: bold; }
+        .error { color: red; }
+        .success { color: green; }
+        @media (max-width: 480px) { .container { padding: 30px 20px; } }
+    </style>
+</head>
+<body>
+<div class="container">
+    <h1>Connexion Enseignant</h1>
+{% if request.resolver_match.url_name == 'enseignant_login' %}
+    {% if messages %}
+        {% for message in messages %}
+            <p class="message {{ message.tags }}">{{ message }}</p>
+        {% endfor %}
+    {% endif %}
+{% endif %}
+
+
+    <form method="post">
+        {% csrf_token %}
+        <label>Email</label>
+        <input type="email" name="email" required>
+
+        <label>Mot de passe</label>
+        <input type="password" name="password" required>
+
+        <button type="submit">Se connecter</button>
+    </form>
+
+    <p class="register-link">
+        Pas encore de compte ? <a href="{% url 'register_enseignant' %}">Créer un compte</a>
+    </p>
+    <p class="register-link">
+    <a href="{% url 'enseignant_mdp_oublie' %}">Mot de passe oublié ?</a>
+</p>
+
+</div>
+</body>
+</html>

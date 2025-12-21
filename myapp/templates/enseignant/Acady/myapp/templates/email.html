@@ -1,0 +1,99 @@
+{% extends 'base.html' %}
+{% block title %}{{ school_name }} - Envoi des Résultats{% endblock %}
+
+{% block content %}
+<style>
+    body {
+        background: linear-gradient(135deg, #f3f4f6, #e2e8f0);
+        font-family: 'Segoe UI', sans-serif;
+    }
+
+    .navbar {
+        border-bottom: 3px solid #0d6efd;
+        box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+    }
+
+    .card {
+        border-radius: 15px;
+        box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+        transition: 0.3s;
+        background: white;
+    }
+
+    .card:hover {
+        transform: scale(1.01);
+    }
+
+    .btn-success {
+        font-weight: 600;
+        border-radius: 10px;
+        padding: 10px 20px;
+    }
+
+    .alert {
+        border-radius: 10px;
+        text-align: center;
+        font-weight: 500;
+    }
+</style>
+
+<!-- Barre supérieure avec le nom de l’école en bouton de retour -->
+<nav class="navbar navbar-expand-lg navbar-dark bg-primary mb-4">
+    <div class="container-fluid text-center justify-content-center">
+        {% if eleve.classe == "3ème" %}
+            <a class="navbar-brand fs-4" href="{% url 'afficher_troisieme' annee=eleve.annee_academique %}">
+                {{ school_name }}
+            </a>
+        {% elif eleve.classe == "4ème" %}
+            <a class="navbar-brand fs-4" href="{% url 'afficher_quatrieme' annee=eleve.annee_academique %}">
+                {{ school_name }}
+            </a>
+        {% elif eleve.classe == "5ème" %}
+            <a class="navbar-brand fs-4" href="{% url 'afficher_cinquieme' annee=eleve.annee_academique %}">
+                {{ school_name }}
+            </a>
+        {% elif eleve.classe == "6ème" %}
+            <a class="navbar-brand fs-4" href="{% url 'afficher_sixieme' annee=eleve.annee_academique %}">
+                {{ school_name }}
+            </a>
+        {% else %}
+            <span class="navbar-brand fs-4 text-warning">{{ school_name }}</span>
+        {% endif %}
+    </div>
+</nav>
+
+<div class="container mt-5">
+    <div class="card p-4">
+        <h3 class="text-center text-primary mb-3">
+            ✉️ Envoi des résultats - {{ eleve.nom }} {{ eleve.prenoms }}
+        </h3>
+        <p class="text-center text-muted mb-4">
+            Classe : <strong>{{ eleve.classe }}</strong> — Année : <strong>{{ eleve.annee_academique }}</strong>
+        </p>
+
+        {% if messages %}
+            {% for message in messages %}
+                <div class="alert alert-{{ message.tags }}">{{ message }}</div>
+            {% endfor %}
+        {% endif %}
+
+        <form method="get" action="{% url 'envoyer_email_notes' eleve.id 1 %}">
+            {% csrf_token %}
+            <div class="mb-3">
+                <label for="trimestre" class="form-label fw-bold">📚 Choisir le trimestre :</label>
+                <select name="trimestre" id="trimestre" class="form-select">
+                    <option value="1">Trimestre 1</option>
+                    <option value="2">Trimestre 2</option>
+                    <option value="3">Trimestre 3</option>
+                </select>
+            </div>
+
+            <div class="text-center mt-4">
+                <button type="submit" class="btn btn-success btn-lg">
+                    🚀 Envoyer les résultats
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}

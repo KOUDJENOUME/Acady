@@ -1,0 +1,147 @@
+{% extends 'base.html' %}
+
+{% block title %} Liste des élèves de la {{ classe }} {% endblock title %} 
+
+{% block content %}
+<style>
+    #pdf-content {
+        font-size: 12px;
+        padding: 5px;
+    }
+
+    h4, h5, h6 {
+        margin: 5px 0;
+        font-size: 14px;
+    }
+
+    p {
+        margin: 2px 0;
+    }
+
+    .table th, .table td {
+        padding: 4px;
+        font-size: 11px;
+        vertical-align: middle;
+        text-align: center;
+    }
+
+    .photo-eleve {
+        width: 40px;
+        height: 40px;
+        object-fit: cover;
+        border-radius: 50%;
+    }
+
+    .container {
+        max-width: 100%;
+        padding-left: 5px;
+        padding-right: 5px;
+    }
+
+    table {
+        width: 100% !important;
+    }
+
+    tr {
+        page-break-inside: avoid !important;
+        break-inside: avoid !important;
+    }
+
+    @media print {
+        #download-pdf, .pagination {
+            display: none !important;
+        }
+    }
+</style>
+
+<nav class="navbar navbar-expand-lg navbar-light bg-light">
+    <div class="container-fluid">
+        <a class="navbar-brand mx-auto" href="{% url 'accueil' %}">{{ school_name }}</a>
+    </div>
+</nav>
+
+<div class="container mt-2 text-center">
+    <button id="download-pdf" class="btn btn-primary btn-sm">Télécharger la liste en PDF</button>
+</div>
+
+<div id="pdf-content">
+
+    {% if page_obj.number == 1 %}
+    <div class="container mt-2 text-center">
+        <h4>Liste des élèves de la {{ classe }}</h4>
+        <h5>Année académique : {{ annee_academique }}</h5>
+    </div>
+
+    <div class="container mt-2">
+        <div class="row text-center">
+            <div class="col-md-4"><h6>Total élèves</h6><p>{{ total_eleves }}</p></div>
+            <div class="col-md-4"><h6>Total garçons</h6><p>{{ total_garcons }}</p></div>
+            <div class="col-md-4"><h6>Total filles</h6><p>{{ total_filles }}</p></div>
+        </div>
+    </div>
+    {% endif %}
+
+    <div class="container mt-2">
+        <table class="table table-bordered table-sm">
+            <thead>
+                <tr>
+                    <th>N°</th>
+                    <th>Matricule</th>
+                    <th>Nom & Prénoms</th>
+                    <th>Sexe</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for eleve in eleves %}
+                <tr>
+                    <td>{{ eleve.numero_global }}</td>
+                    <td>{{ eleve.matricule }}</td>
+                    <td>{{ eleve.nom }} {{ eleve.prenoms }}</td>
+                    <td>{{ eleve.sexe }}</td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="5">Aucun élève trouvé.</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+
+        {% if page_obj.paginator.num_pages > 1 %}
+        <!-- Pagination -->
+        <div class="pagination">
+            <nav aria-label="Page navigation">
+                <ul class="pagination justify-content-center">
+                    {% for num in page_obj.paginator.page_range %}
+                    <li class="page-item {% if page_obj.number == num %}active{% endif %}">
+                        <a class="page-link" href="?page={{ num }}">
+                            {{ num }}
+                        </a>
+                    </li>
+                    {% endfor %}
+                </ul>
+            </nav>
+        </div>
+        {% endif %}
+    </div>
+</div>
+
+<!-- html2pdf -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+<script>
+    document.getElementById("download-pdf").addEventListener("click", function () {
+        const element = document.getElementById("pdf-content");
+
+        const opt = {
+            margin: 5,
+            filename: 'liste_eleves_{{ classe|slugify }}.pdf',
+            image: { type: 'jpeg', quality: 0.98 },
+            html2canvas: { scale: 2 },
+            jsPDF: { unit: 'mm', format: 'a4', orientation: 'landscape' }
+        };
+
+        html2pdf().set(opt).from(element).save();
+    });
+</script>
+
+{% endblock content %}

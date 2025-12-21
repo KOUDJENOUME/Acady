@@ -1,0 +1,88 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block content %}
+<div class="container mt-4">
+
+    <!-- Informations visibles sur le PDF -->
+    <div id="zonePDF">
+
+        <div class="text-center mb-4">
+            <h2>🏫 Établissement : CPEG LE TRESOR DE DOWA</h2>
+            <h3 class="text-primary">📅 Heures Mensuelles des Enseignants</h3>
+
+            {% if mois_filter %}
+                {% for mois in mois_options %}
+                    {% if mois.num == mois_filter %}
+                        <h4>Mois : <b>{{ mois.nom }}</b></h4>
+                    {% endif %}
+                {% endfor %}
+            {% else %}
+                <h4>Mois : <b>Tous</b></h4>
+            {% endif %}
+        </div>
+
+        {% if heures_par_enseignant %}
+        <table class="table table-bordered table-striped text-center">
+            <thead class="table-dark">
+                <tr>
+                    <th>Nom</th>
+                    <th>Prénoms</th>
+                    <th>Matière</th>
+                    <th>Heures effectuées</th>
+                </tr>
+            </thead>
+            <tbody>
+            {% for enseignant_id, data in heures_par_enseignant.items %}
+    {% for matiere, heures in data.matieres.items %}
+    <tr>
+        <td>{{ data.enseignant.nom }}</td>
+        <td>{{ data.enseignant.prenoms }}</td>
+        <td>{{ matiere }}</td>
+        <td><b>{{ heures|floatformat:2 }} h</b></td>
+    </tr>
+    {% endfor %}
+{% endfor %}
+
+            </tbody>
+        </table>
+        {% else %}
+            <p class="text-center text-danger">Aucune donnée pour ce mois.</p>
+        {% endif %}
+
+    </div> <!-- fin zonePDF -->
+
+    <div class="d-flex justify-content-center gap-2 mt-3">
+        <a href="{% url 'accueil' %}" class="btn btn-outline-secondary">⬅️ Retour à l’accueil</a>
+        <button id="btnPDF" class="btn btn-danger">📥 Télécharger en PDF</button>
+    </div>
+
+    <!-- Filtre mois -->
+    <form method="GET" class="mb-4 text-center mt-3">
+        <select name="mois" class="form-select d-inline" style="width:180px;">
+            <option value="">Tous les mois</option>
+            {% for mois in mois_options %}
+                <option value="{{ mois.num }}" {% if mois_filter == mois.num %}selected{% endif %}>
+                    {{ mois.nom }}
+                </option>
+            {% endfor %}
+        </select>
+        <button class="btn btn-info">Filtrer</button>
+    </form>
+
+</div>
+
+<!-- html2pdf.js -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+<script>
+document.getElementById("btnPDF").addEventListener("click", function () {
+    html2pdf().set({
+        margin: 0.5,
+        filename: 'heures_mensuelles.pdf',
+        image: { type: 'jpeg', quality: 0.98 },
+        html2canvas: { scale: 2 },
+        jsPDF: { unit: 'in', format: 'A4', orientation: 'portrait' }
+    }).from(document.getElementById('zonePDF')).save();
+});
+</script>
+{% endblock %}

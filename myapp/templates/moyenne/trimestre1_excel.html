@@ -1,0 +1,174 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <title>Excel Trimestre 1 - {{ classe }}</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <style>
+        body {
+            font-family: "Poppins", Arial, sans-serif;
+            background: #f8f9fb;
+            padding: 20px;
+        }
+
+        h1 {
+            text-align: center;
+            color: #333;
+        }
+
+        select, button {
+            margin: 10px;
+            padding: 8px 12px;
+            border-radius: 6px;
+            border: 1px solid #ccc;
+            font-size: 15px;
+        }
+
+        button {
+            background-color: #0066cc;
+            color: white;
+            border: none;
+            cursor: pointer;
+        }
+
+        button:hover {
+            background-color: #004999;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            background: white;
+            margin-top: 10px;
+        }
+
+        th, td {
+            border: 1px solid #ccc;
+            text-align: center;
+            padding: 6px;
+            font-size: 13px;
+        }
+
+        th {
+            background-color: #e0e0e0;
+            font-weight: bold;
+        }
+
+        tr:nth-child(even) {
+            background-color: #f9f9f9;
+        }
+
+        .footer {
+            margin-top: 20px;
+            text-align: center;
+            color: #444;
+            font-size: 14px;
+        }
+    </style>
+</head>
+<body>
+    <h1>{{ school_name }} — Classe : {{ classe }} — Trimestre {{ trimestre }}</h1>
+
+    <div style="text-align: center;">
+        <label for="matiereSelect"><strong>Choisir une matière :</strong></label>
+        <select id="matiereSelect" onchange="filterByMatiere()">
+            <option value="toutes">Toutes les matières</option>
+            {% for matiere in order_of_subjects %}
+                <option value="{{ matiere }}">{{ matiere }}</option>
+            {% endfor %}
+        </select>
+
+        <button onclick="exportExcel()">📘 Télécharger Excel</button>
+    </div>
+
+    <table id="table_excel">
+        <thead>
+            <tr id="matiereHeaders">
+                <th>#</th>
+                <th>Nom & Prénoms</th>
+                {% for matiere in order_of_subjects %}
+                    <th class="matiere-col {{ matiere }}" colspan="5">{{ matiere }}</th>
+                {% endfor %}
+                <th class="always-visible">MT</th>
+                <th class="always-visible">Rang</th>
+            </tr>
+            <tr>
+                <th></th>
+                <th></th>
+                {% for matiere in order_of_subjects %}
+                    <th class="matiere-col {{ matiere }}">MInt</th>
+                    <th class="matiere-col {{ matiere }}">Dev1</th>
+                    <th class="matiere-col {{ matiere }}">Dev2</th>
+                    <th class="matiere-col {{ matiere }}">Moy</th>
+                    <th class="matiere-col {{ matiere }}">MCoef</th>
+                {% endfor %}
+                <th class="always-visible">MT</th>
+                <th class="always-visible">Rang</th>
+            </tr>
+        </thead>
+
+        <tbody>
+            {% for result in page_obj %}
+            <tr>
+                <td>{{ forloop.counter0|add:page_obj.start_index }}</td>
+                <td>{{ result.eleve.nom }} {{ result.eleve.prenoms }}</td>
+
+                {% for matiere, details in result.matieres_status.items %}
+                    <td class="matiere-col {{ matiere }}">{{ details.moyenne_interros|default_if_none:"" }}</td>
+                    <td class="matiere-col {{ matiere }}">{{ details.devoir1|default_if_none:"" }}</td>
+                    <td class="matiere-col {{ matiere }}">{{ details.devoir2|default_if_none:"" }}</td>
+                    <td class="matiere-col {{ matiere }}">{{ details.moyenne_matiere|default_if_none:""|floatformat:2 }}</td>
+                    <td class="matiere-col {{ matiere }}">{{ details.mcoef|default_if_none:""|floatformat:2 }}</td>
+                {% endfor %}
+
+                <td class="always-visible">{{ result.moyenne_trimestrielle|floatformat:2 }}</td>
+                <td class="always-visible">{{ result.rang }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+
+    <div class="footer">
+        <p>Moyenne maximale : <strong>{{ moyenne_max|floatformat:2 }}</strong> — Moyenne minimale : <strong>{{ moyenne_min|floatformat:2 }}</strong></p>
+        <p>Année académique : <strong>{{ annee_academique }}</strong></p>
+        <p>Page {{ page_obj.number }} sur {{ page_obj.paginator.num_pages }}</p>
+    </div>
+
+    <script>
+        function filterByMatiere() {
+            const selectedMatiere = document.getElementById("matiereSelect").value;
+            const allCols = document.querySelectorAll(".matiere-col");
+
+            if (selectedMatiere === "toutes") {
+                allCols.forEach(col => col.style.display = "");
+            } else {
+                allCols.forEach(col => {
+                    if (col.classList.contains(selectedMatiere)) {
+                        col.style.display = "";
+                    } else {
+                        col.style.display = "none";
+                    }
+                });
+            }
+        }
+
+        function exportExcel() {
+            const selectedMatiere = document.getElementById("matiereSelect").value;
+            const table = document.getElementById("table_excel").cloneNode(true);
+
+            if (selectedMatiere !== "toutes") {
+                // Supprimer les colonnes non sélectionnées
+                table.querySelectorAll(".matiere-col").forEach(col => {
+                    if (!col.classList.contains(selectedMatiere)) {
+                        col.remove();
+                    }
+                });
+            }
+
+            const wb = XLSX.utils.table_to_book(table, {sheet: selectedMatiere === "toutes" ? "Toutes_matieres" : selectedMatiere});
+            XLSX.writeFile(wb, "Moyennes_{{ classe }}_Trimestre1_" + selectedMatiere + ".xlsx");
+        }
+    </script>
+</body>
+</html>
