@@ -86,22 +86,16 @@ WSGI_APPLICATION = 'projet.wsgi.application'
 # https://docs.djangoproject.com/en/5.1/ref/settings/#databases
 
 from decouple import config
+import dj_database_url
 
 DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.mysql',
-        'NAME': config('DB_NAME'),
-        'USER': config('DB_USER'),
-        'PASSWORD': config('DB_PASSWORD'),
-        'HOST': config('DB_HOST'),
-        'PORT': config('DB_PORT', cast=int, default=3306),
-    }
+    'default': dj_database_url.parse(
+        config('DATABASE_URL'),  # lit la variable DATABASE_URL du .env
+        engine='django.db.backends.postgresql',
+        conn_max_age=600,
+        ssl_require=True
+    )
 }
-
-
-SECRET_KEY = config('SECRET_KEY')
-DEBUG = config('DEBUG', cast=bool, default=True)
-
 
 
 
