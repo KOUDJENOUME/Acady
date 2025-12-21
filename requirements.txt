@@ -35,3 +35,4 @@ typing-extensions>=4.4
 # Outils internes Django
 asgiref>=3.9.1
 sqlparse>=0.5.0
+gunicorn
