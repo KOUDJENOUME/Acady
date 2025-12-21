@@ -7,7 +7,7 @@ class Login(models.Model):
     username = models.CharField(max_length=100)
     school_name = models.CharField(max_length=100)
     password = models.CharField(max_length=100)
-    email= models.CharField(max_length=100)
+    email= models.CharField(max_length=512)
     numero = models.CharField(max_length=100)
     name = models.CharField(max_length=100,null=True)
     profile_image = models.ImageField(upload_to="profile_images/", blank=True, null=True)
