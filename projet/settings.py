@@ -152,6 +152,7 @@ INFOBIP_SENDER = config('INFOBIP_SENDER', default='AcadyApp')
 # settings.py
 EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'  # Affiche dans les logs
 
+EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
 EMAIL_HOST = 'smtp.gmail.com'  # pour Gmail
 EMAIL_PORT = 587
 EMAIL_USE_TLS = True
