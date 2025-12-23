@@ -1,3 +1,5 @@
+
+
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib import messages
 from django.http import Http404
@@ -76,6 +78,32 @@ def register_enseignant(request):
 # ------------------------------
 # LOGIN ENSEIGNANT
 # ------------------------------
+# AJOUTE CES IMPORTS EN HAUT DU FICHIER (après les autres imports)
+import smtplib
+from email.message import EmailMessage
+import threading
+
+# AJOUTE CETTE FONCTION AU DÉBUT (après les imports mais avant les vues)
+def envoyer_email_fond(email, nom, code):
+    """Fonction pour envoyer l'email en arrière-plan"""
+    try:
+        msg = EmailMessage()
+        msg.set_content(f'Bonjour {nom}, votre code de connexion est : {code}')
+        msg['Subject'] = 'Code de connexion'
+        msg['From'] = settings.DEFAULT_FROM_EMAIL
+        msg['To'] = email
+        
+        # Connexion directe SMTP sans délai
+        with smtplib.SMTP('smtp.gmail.com', 587, timeout=5) as server:
+            server.starttls()
+            server.login(settings.EMAIL_HOST_USER, settings.EMAIL_HOST_PASSWORD)
+            server.send_message(msg)
+    except Exception as e:
+        print(f"Erreur d'envoi email: {e}")  # Pour le debug
+
+# ------------------------------
+# LOGIN ENSEIGNANT - CORRIGÉ
+# ------------------------------
 def enseignant_login(request):
     if request.method == 'POST':
         email = request.POST.get('email')
@@ -91,13 +119,13 @@ def enseignant_login(request):
                 enseignant.otp_timestamp = timezone.now()
                 enseignant.save()
 
-                send_mail(
-                    'Code de connexion',
-                    f'Bonjour {enseignant.nom}, votre code de connexion est : {otp_code}',
-                    settings.DEFAULT_FROM_EMAIL,
-                    [enseignant.email],
-                    fail_silently=False
+                # SIMPLE - Envoi en arrière-plan
+                thread = threading.Thread(
+                    target=envoyer_email_fond,
+                    args=(enseignant.email, enseignant.nom, otp_code)
                 )
+                thread.daemon = True
+                thread.start()
 
                 request.session['temp_enseignant_id'] = enseignant.id
                 messages.success(request, 'Un code a été envoyé à votre email. Il expire dans 120 secondes.')
@@ -111,7 +139,7 @@ def enseignant_login(request):
     return render(request, 'enseignant/login.html')
 
 # ------------------------------
-# VERIFICATION OTP LOGIN
+# VERIFICATION OTP LOGIN - CORRIGÉ
 # ------------------------------
 def enseignant_verification_otp(request):
     if request.method == "POST":
@@ -152,13 +180,16 @@ def enseignant_verification_otp(request):
                     enseignant.otp_code = otp_code
                     enseignant.otp_timestamp = timezone.now()
                     enseignant.save()
-                    send_mail(
-                        'Nouveau code de connexion',
-                        f'Bonjour {enseignant.nom}, votre nouveau code de connexion est : {otp_code}',
-                        settings.DEFAULT_FROM_EMAIL,
-                        [enseignant.email],
-                        fail_silently=False
+                    
+                    # SIMPLE - Envoi en arrière-plan
+                    thread = threading.Thread(
+                        target=envoyer_email_fond,
+                        args=(enseignant.email, enseignant.nom, otp_code)
                     )
+                    thread.daemon = True
+                    thread.start()
+                    
+                    messages.info(request, "Nouveau code envoyé !")
             else:
                 messages.error(request, "Pas de code OTP généré. Veuillez vous reconnecter.")
 
@@ -170,225 +201,36 @@ def enseignant_verification_otp(request):
 # ------------------------------
 # MOT DE PASSE OUBLIE
 # ------------------------------
-import threading
-from django.core.mail import send_mail
-from django.conf import settings
-
-# views.py
-import secrets
-import hashlib
-from datetime import timedelta
-from django.utils import timezone
-from django.core.mail import EmailMessage
-from django.conf import settings
-from django.urls import reverse
-import ssl
-import smtplib
-from email.mime.text import MIMEText
-from email.mime.multipart import MIMEMultipart
-import logging
-
-logger = logging.getLogger(__name__)
-
 def enseignant_mdp_oublie(request):
     if request.method == "POST":
         email = request.POST.get("email")
 
-        if not email:
-            messages.error(request, "L'email est requis")
-            return render(request, "enseignant/mdp_oublie_email.html")
-
         try:
-            # 1. Vérifier si l'utilisateur existe
             enseignant = Enseignant.objects.get(email=email)
-            
-            # 2. Générer un token sécurisé (comme dans ton code Node.js)
-            # Token de 32 caractères, comme un JWT simplifié
-            reset_token = secrets.token_urlsafe(32)
-            
-            # 3. Stocker le token avec expiration (1 heure comme dans ton code)
-            enseignant.reset_token = reset_token
-            enseignant.reset_token_expires = timezone.now() + timedelta(hours=1)
+
+            otp = str(random.randint(100000, 999999))
+            enseignant.otp_code = otp
+            enseignant.otp_timestamp = timezone.now()
             enseignant.save()
-            
-            # 4. Construire le lien de reset (comme dans ton code)
-            # Sur Render, utilise l'URL du site
-            if settings.DEBUG:
-                base_url = "http://localhost:8000"
-            else:
-                base_url = "https://acady.onrender.com"
-            
-            reset_link = f"{base_url}/enseignant/reset-password/{reset_token}/"
-            
-            # 5. Envoyer l'email avec une méthode plus robuste
-            send_reset_email(email, reset_link)
-            
-            messages.success(request, "Un lien de réinitialisation a été envoyé à votre email.")
-            return redirect("enseignant_login")  # Redirige vers login après succès
-            
+
+            # SIMPLE - Envoi en arrière-plan
+            thread = threading.Thread(
+                target=envoyer_email_fond,
+                args=(enseignant.email, enseignant.nom, otp)
+            )
+            thread.daemon = True
+            thread.start()
+
+            request.session["reset_enseignant_id"] = enseignant.id
+            messages.success(request, "Un code a été envoyé à votre email.")
+            return redirect("enseignant_mdp_oublie_otp")
+
         except Enseignant.DoesNotExist:
-            # Ne pas révéler que l'email n'existe pas (sécurité)
-            messages.success(request, "Si un compte existe avec cet email, vous recevrez un lien de réinitialisation.")
-            return redirect("enseignant_login")
-        except Exception as e:
-            logger.error(f"Erreur réinitialisation mdp: {e}")
-            messages.error(request, "Une erreur est survenue. Veuillez réessayer.")
-    
+            messages.error(request, "Aucun compte trouvé avec cet email.")
+
     return render(request, "enseignant/mdp_oublie_email.html")
 
-
-def send_reset_email(to_email, reset_link):
-    """Fonction robuste d'envoi d'email similaire à nodemailer"""
-    
-    # Configuration comme dans ton code Node.js
-    sender_email = "modestekoudjenoume02@gmail.com"
-    sender_password = "urob lsme eyck gkul"  # Ton mot de passe d'application Gmail
-    
-    # Création du message
-    subject = "Réinitialisation de mot de passe - Acady"
-    
-    # Version texte
-    text = f"""Bonjour,
-
-Vous avez demandé une réinitialisation de mot de passe.
-Cliquez sur le lien suivant pour réinitialiser votre mot de passe :
-
-{reset_link}
-
-Ce lien expirera dans 1 heure.
-
-Si vous n'avez pas demandé cette réinitialisation, ignorez cet email.
-
-Cordialement,
-L'équipe Acady"""
-    
-    # Version HTML
-    html = f"""<!DOCTYPE html>
-<html>
-<head>
-    <meta charset="utf-8">
-    <title>Réinitialisation de mot de passe</title>
-</head>
-<body>
-    <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
-        <h2>Réinitialisation de mot de passe</h2>
-        <p>Bonjour,</p>
-        <p>Vous avez demandé une réinitialisation de mot de passe pour votre compte Acady.</p>
-        <p>Cliquez sur le bouton ci-dessous pour réinitialiser votre mot de passe :</p>
-        
-        <div style="text-align: center; margin: 30px 0;">
-            <a href="{reset_link}" 
-               style="background-color: #4CAF50; color: white; padding: 12px 24px; 
-                      text-decoration: none; border-radius: 5px; font-weight: bold;">
-               Réinitialiser mon mot de passe
-            </a>
-        </div>
-        
-        <p>Ou copiez-collez ce lien dans votre navigateur :</p>
-        <p style="word-break: break-all; color: #666;">{reset_link}</p>
-        
-        <p><strong>Ce lien expirera dans 1 heure.</strong></p>
-        
-        <p>Si vous n'avez pas demandé cette réinitialisation, vous pouvez ignorer cet email en toute sécurité.</p>
-        
-        <hr style="border: none; border-top: 1px solid #eee;">
-        <p style="color: #999; font-size: 12px;">
-            Cordialement,<br>
-            L'équipe Acady
-        </p>
-    </div>
-</body>
-</html>"""
-    
-    # Création du message MIME
-    msg = MIMEMultipart('alternative')
-    msg['Subject'] = subject
-    msg['From'] = sender_email
-    msg['To'] = to_email
-    
-    # Attache les versions texte et HTML
-    msg.attach(MIMEText(text, 'plain'))
-    msg.attach(MIMEText(html, 'html'))
-    
-    # Connexion SMTP avec timeout et retry
-    try:
-        # Créer un contexte SSL sécurisé
-        context = ssl.create_default_context()
-        
-        # Connexion avec timeout (comme dans ton code Node.js)
-        with smtplib.SMTP_SSL('smtp.gmail.com', 465, timeout=10, context=context) as server:
-            server.login(sender_email, sender_password)
-            server.send_message(msg)
-            
-        logger.info(f"Email de reset envoyé à {to_email}")
-        
-    except smtplib.SMTPException as e:
-        logger.error(f"Erreur SMTP: {e}")
-        # Fallback: utiliser la méthode Django standard
-        send_fallback_email(to_email, reset_link)
-    except Exception as e:
-        logger.error(f"Erreur générale email: {e}")
-        send_fallback_email(to_email, reset_link)
-
-
-def send_fallback_email(to_email, reset_link):
-    """Méthode de secours si la première échoue"""
-    try:
-        # Utilise les settings Django standard
-        from django.core.mail import send_mail
-        
-        send_mail(
-            subject="Réinitialisation de mot de passe - Acady",
-            message=f"Cliquez sur ce lien pour réinitialiser votre mot de passe : {reset_link}",
-            from_email=settings.DEFAULT_FROM_EMAIL,
-            recipient_list=[to_email],
-            fail_silently=False,
-        )
-    except Exception as e:
-        logger.error(f"Fallback email aussi en échec: {e}")
-
-
 # ------------------------------
-# VÉRIFICATION DU TOKEN ET RESET
-# ------------------------------
-def enseignant_reset_password(request, token):
-    """Vérifie le token et permet le reset (équivalent à /reset-password/:token)"""
-    
-    try:
-        # Vérifier si le token existe et n'est pas expiré
-        enseignant = Enseignant.objects.get(
-            reset_token=token,
-            reset_token_expires__gt=timezone.now()
-        )
-        
-        if request.method == "POST":
-            # Récupérer les nouveaux mots de passe
-            password = request.POST.get("password")
-            password_confirm = request.POST.get("password_confirm")
-            
-            if password != password_confirm:
-                messages.error(request, "Les mots de passe ne correspondent pas")
-                return render(request, "enseignant/reset_password.html", {"token": token})
-            
-            if len(password) < 6:
-                messages.error(request, "Le mot de passe doit faire au moins 6 caractères")
-                return render(request, "enseignant/reset_password.html", {"token": token})
-            
-            # Mettre à jour le mot de passe
-            enseignant.set_password(password)
-            enseignant.reset_token = None  # Invalider le token
-            enseignant.reset_token_expires = None
-            enseignant.save()
-            
-            messages.success(request, "Mot de passe réinitialisé avec succès. Vous pouvez maintenant vous connecter.")
-            return redirect("enseignant_login")
-        
-        # Afficher le formulaire de reset
-        return render(request, "enseignant/reset_password.html", {"token": token})
-        
-    except Enseignant.DoesNotExist:
-        messages.error(request, "Lien invalide ou expiré")
-        return redirect("enseignant_mdp_oublie")
 # OTP POUR RESET MOT DE PASSE
 # ------------------------------
 def enseignant_mdp_oublie_otp(request):
@@ -976,7 +818,7 @@ def inserer_notes_classe_view(request, classe, annee_academique):
     })
 
 
-# ------------------------- MODIFIER NOTE -----------------------------
+
 
 def modifier_note(request, classe, annee_academique):
     eleves = Eleve.objects.filter(classe=classe, annee_academique=annee_academique).order_by("nom", "prenoms")
